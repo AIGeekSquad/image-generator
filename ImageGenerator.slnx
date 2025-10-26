@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ImageGenerator.Core/ImageGenerator.Core.csproj" />
+    <Project Path="src/ImageGenerator.Tool/ImageGenerator.Tool.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ImageGenerator.Tests/ImageGenerator.Tests.csproj" />
+  </Folder>
+</Solution>
