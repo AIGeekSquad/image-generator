@@ -317,7 +317,7 @@ Get information about available providers and their capabilities.
 ### As a Global .NET Tool
 
 ```bash
-dotnet tool install --global ImageGenerator.Tool
+dotnet tool install --global AiGeekSquad.ImageGenerator
 ```
 
 ### From Source
