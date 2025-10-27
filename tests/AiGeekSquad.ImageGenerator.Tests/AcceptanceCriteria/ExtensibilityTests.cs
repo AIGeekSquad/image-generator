@@ -1,4 +1,6 @@
 using Microsoft.Extensions.AI;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Services;
@@ -22,7 +24,7 @@ public class ExtensibilityTests
         // Acceptance Criteria: Third parties can implement custom providers
         var customProvider = new CustomTestProvider();
 
-        Assert.Equal("CustomTest", customProvider.ProviderName);
+        customProvider.ProviderName.Should().Be("CustomTest");
         Assert.NotNull(customProvider.GetCapabilities());
         Assert.True(customProvider.SupportsOperation(ImageOperation.Generate));
     }
@@ -40,9 +42,9 @@ public class ExtensibilityTests
         var service = new ImageGenerationService(new[] { provider1.Object, provider2.Object });
         var providers = service.GetProviders();
 
-        Assert.Equal(2, providers.Count);
-        Assert.Contains(providers, p => p.ProviderName == "Provider1");
-        Assert.Contains(providers, p => p.ProviderName == "Provider2");
+        providers.Count.Should().Be(2);
+        providers.Should().Contain(p => p.ProviderName == "Provider1");
+        providers.Should().Contain(p => p.ProviderName == "Provider2");
     }
 
     [Fact]
@@ -55,7 +57,7 @@ public class ExtensibilityTests
             ExampleModels = new List<string> { "model-v1" }
         };
 
-        Assert.True(capabilities.AcceptsCustomModels);
+        capabilities.AcceptsCustomModels.Should().BeTrue();
     }
 
     [Fact]
@@ -72,9 +74,9 @@ public class ExtensibilityTests
             }
         };
 
-        Assert.Equal(3, capabilities.Features.Count);
+        capabilities.Features.Count.Should().Be(3);
         Assert.True((bool)capabilities.Features["supportsHD"]);
-        Assert.Equal("2048x2048", capabilities.Features["maxResolution"]);
+        capabilities.Features["maxResolution"].Should().Be("2048x2048");
     }
 
     [Fact]
@@ -100,7 +102,7 @@ public class ExtensibilityTests
         var request = new CoreImageRequest { Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") } };
         var result = await service.GenerateImageAsync("Provider1", request);
 
-        Assert.Equal("Provider1", result.Provider);
+        result.Provider.Should().Be("Provider1");
         provider1.Verify(p => p.GenerateImageAsync(request, It.IsAny<CancellationToken>()), Times.Once);
         provider2.Verify(p => p.GenerateImageAsync(It.IsAny<CoreImageRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }

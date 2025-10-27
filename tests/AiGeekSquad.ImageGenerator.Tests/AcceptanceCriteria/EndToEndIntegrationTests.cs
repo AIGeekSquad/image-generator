@@ -3,6 +3,8 @@ using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationR
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
 using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
+using FluentAssertions;
+using FluentAssertions.Execution;
 namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
 
 /// <summary>
@@ -22,7 +24,7 @@ public class EndToEndIntegrationTests
         // 4. Verify response contains valid image URL or data
         // 5. Verify image can be downloaded/accessed
         
-        Assert.True(true); // Placeholder
+        true.Should().BeTrue(); // Placeholder
     }
 
     [Fact(Skip = "Requires OpenAI API key")]
@@ -31,7 +33,7 @@ public class EndToEndIntegrationTests
         // End-to-end test: Generate an image using GPT Image 1
         // TODO: Implement when API keys are available and model is available
         
-        Assert.True(true); // Placeholder
+        true.Should().BeTrue(); // Placeholder
     }
 
     [Fact(Skip = "Requires Google Cloud credentials")]
@@ -45,7 +47,7 @@ public class EndToEndIntegrationTests
         // 4. Verify response contains valid base64 image data
         // 5. Verify image can be decoded
         
-        Assert.True(true); // Placeholder
+        true.Should().BeTrue(); // Placeholder
     }
 
     [Fact(Skip = "Requires OpenAI API key")]
@@ -58,7 +60,7 @@ public class EndToEndIntegrationTests
         // 3. Call EditImageAsync
         // 4. Verify edited image is returned
         
-        Assert.True(true); // Placeholder
+        true.Should().BeTrue(); // Placeholder
     }
 
     [Fact(Skip = "Requires OpenAI API key")]
@@ -71,7 +73,7 @@ public class EndToEndIntegrationTests
         // 3. Call CreateVariationAsync
         // 4. Verify variations are returned
         
-        Assert.True(true); // Placeholder
+        true.Should().BeTrue(); // Placeholder
     }
 
     [Fact(Skip = "Requires API key and supports conversational input")]
@@ -83,7 +85,7 @@ public class EndToEndIntegrationTests
         // 2. Call GenerateImageFromConversationAsync
         // 3. Verify generated image considers the reference images
         
-        Assert.True(true); // Placeholder
+        true.Should().BeTrue(); // Placeholder
     }
 
     [Fact(Skip = "Requires custom provider assembly")]
@@ -96,7 +98,7 @@ public class EndToEndIntegrationTests
         // 3. Verify provider is registered
         // 4. Generate image using custom provider
         
-        Assert.True(true); // Placeholder
+        true.Should().BeTrue(); // Placeholder
     }
 
     [Fact(Skip = "Requires MCP client")]
@@ -109,7 +111,7 @@ public class EndToEndIntegrationTests
         // 3. Call generate_image tool
         // 4. Verify response
         
-        Assert.True(true); // Placeholder
+        true.Should().BeTrue(); // Placeholder
     }
 
     [Fact(Skip = "Requires MCP client")]
@@ -122,6 +124,6 @@ public class EndToEndIntegrationTests
         // 3. Call generate_image_from_conversation tool with JSON conversation
         // 4. Verify response
         
-        Assert.True(true); // Placeholder
+        true.Should().BeTrue(); // Placeholder
     }
 }

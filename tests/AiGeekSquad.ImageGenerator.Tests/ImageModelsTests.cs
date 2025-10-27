@@ -1,5 +1,7 @@
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
+using FluentAssertions;
+using FluentAssertions.Execution;
 
 namespace AiGeekSquad.ImageGenerator.Tests;
 
@@ -9,47 +11,62 @@ public class ImageModelsTests
     public void OpenAI_Models_AreDefined()
     {
         // Verify all OpenAI models are properly defined
-        Assert.NotNull(ImageModels.OpenAI.DallE3);
-        Assert.NotNull(ImageModels.OpenAI.DallE2);
-        Assert.NotNull(ImageModels.OpenAI.GPTImage1);
-        Assert.NotNull(ImageModels.OpenAI.GPT5Image);
-        Assert.NotNull(ImageModels.OpenAI.Default);
+        using (new AssertionScope())
+        {
+            ImageModels.OpenAI.DallE3.Should().NotBeNullOrEmpty();
+            ImageModels.OpenAI.DallE2.Should().NotBeNullOrEmpty();
+            ImageModels.OpenAI.GPTImage1.Should().NotBeNullOrEmpty();
+            ImageModels.OpenAI.GPT5Image.Should().NotBeNullOrEmpty();
+            ImageModels.OpenAI.Default.Should().NotBeNullOrEmpty();
+        }
     }
 
     [Fact]
     public void Google_Models_AreDefined()
     {
         // Verify all Google models are properly defined
-        Assert.NotNull(ImageModels.Google.Imagen3);
-        Assert.NotNull(ImageModels.Google.Imagen2);
-        Assert.NotNull(ImageModels.Google.ImagenFast);
-        Assert.NotNull(ImageModels.Google.Default);
+        using (new AssertionScope())
+        {
+            ImageModels.Google.Imagen3.Should().NotBeNullOrEmpty();
+            ImageModels.Google.Imagen2.Should().NotBeNullOrEmpty();
+            ImageModels.Google.ImagenFast.Should().NotBeNullOrEmpty();
+            ImageModels.Google.Default.Should().NotBeNullOrEmpty();
+        }
     }
 
     [Fact]
     public void Sizes_AreDefined()
     {
         // Verify all standard sizes are defined
-        Assert.NotNull(ImageModels.Sizes.Square1024);
-        Assert.NotNull(ImageModels.Sizes.Square512);
-        Assert.NotNull(ImageModels.Sizes.Square256);
-        Assert.NotNull(ImageModels.Sizes.Wide1792x1024);
-        Assert.NotNull(ImageModels.Sizes.Tall1024x1792);
+        using (new AssertionScope())
+        {
+            ImageModels.Sizes.Square1024.Should().NotBeNullOrEmpty();
+            ImageModels.Sizes.Square512.Should().NotBeNullOrEmpty();
+            ImageModels.Sizes.Square256.Should().NotBeNullOrEmpty();
+            ImageModels.Sizes.Wide1792x1024.Should().NotBeNullOrEmpty();
+            ImageModels.Sizes.Tall1024x1792.Should().NotBeNullOrEmpty();
+        }
     }
 
     [Fact]
     public void Quality_Options_AreDefined()
     {
         // Verify quality options are defined
-        Assert.NotNull(ImageModels.Quality.Standard);
-        Assert.NotNull(ImageModels.Quality.HD);
+        using (new AssertionScope())
+        {
+            ImageModels.Quality.Standard.Should().NotBeNullOrEmpty();
+            ImageModels.Quality.HD.Should().NotBeNullOrEmpty();
+        }
     }
 
     [Fact]
     public void Style_Options_AreDefined()
     {
         // Verify style options are defined
-        Assert.NotNull(ImageModels.Style.Vivid);
-        Assert.NotNull(ImageModels.Style.Natural);
+        using (new AssertionScope())
+        {
+            ImageModels.Style.Vivid.Should().NotBeNullOrEmpty();
+            ImageModels.Style.Natural.Should().NotBeNullOrEmpty();
+        }
     }
 }

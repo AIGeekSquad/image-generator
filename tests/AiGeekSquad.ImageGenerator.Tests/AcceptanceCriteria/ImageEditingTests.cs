@@ -1,4 +1,6 @@
 using Microsoft.Extensions.AI;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
@@ -27,8 +29,8 @@ public class ImageEditingTests
             }
         };
 
-        Assert.NotEmpty(request.Image);
-        Assert.NotNull(request.Messages);
+        request.Image.Should().NotBeEmpty();
+        request.Messages.Should().NotBeNull();
     }
 
     [Fact]
@@ -45,7 +47,7 @@ public class ImageEditingTests
             Mask = "base64_encoded_mask_data"
         };
 
-        Assert.NotNull(request.Mask);
+        request.Mask.Should().NotBeNull();
     }
 
     [Fact]
@@ -58,8 +60,8 @@ public class ImageEditingTests
             NumberOfImages = 3
         };
 
-        Assert.NotEmpty(request.Image);
-        Assert.Equal(3, request.NumberOfImages);
+        request.Image.Should().NotBeEmpty();
+        request.NumberOfImages.Should().Be(3);
     }
 
     [Fact]
@@ -84,6 +86,6 @@ public class ImageEditingTests
             RevisedPrompt = "A serene sunset over calm ocean waters with vibrant orange and pink hues"
         };
 
-        Assert.NotNull(generatedImage.RevisedPrompt);
+        generatedImage.RevisedPrompt.Should().NotBeNull();
     }
 }

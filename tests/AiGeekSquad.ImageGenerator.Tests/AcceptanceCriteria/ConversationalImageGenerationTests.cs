@@ -1,4 +1,6 @@
 using Microsoft.Extensions.AI;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
@@ -25,10 +27,10 @@ public class ConversationalImageGenerationTests
             Text = "Create a beautiful sunset image"
         };
 
-        Assert.NotNull(message);
-        Assert.Equal("user", message.Role);
-        Assert.Equal("Create a beautiful sunset image", message.Text);
-        Assert.Null(message.Images);
+        message.Should().NotBeNull();
+        message.Role.Should().Be("user");
+        message.Text.Should().Be("Create a beautiful sunset image");
+        message.Images.Should().BeNull();
     }
 
     [Fact]
@@ -49,12 +51,12 @@ public class ConversationalImageGenerationTests
             }
         };
 
-        Assert.NotNull(message);
-        Assert.Equal("user", message.Role);
-        Assert.NotNull(message.Text);
-        Assert.NotNull(message.Images);
-        Assert.Single(message.Images);
-        Assert.Equal("Reference style", message.Images[0].Caption);
+        message.Should().NotBeNull();
+        message.Role.Should().Be("user");
+        message.Text.Should().NotBeNull();
+        message.Images.Should().NotBeNull();
+        message.Images.Should().ContainSingle();
+        message.Images[0].Caption.Should().Be("Reference style");
     }
 
     [Fact]
@@ -72,7 +74,7 @@ public class ConversationalImageGenerationTests
             }
         };
 
-        Assert.Equal(2, message.Images!.Count);
+        message.Images!.Count.Should().Be(2);
     }
 
     [Fact]
@@ -85,8 +87,8 @@ public class ConversationalImageGenerationTests
             MimeType = "image/png"
         };
 
-        Assert.NotNull(imageContent.Base64Data);
-        Assert.Equal("image/png", imageContent.MimeType);
+        imageContent.Base64Data.Should().NotBeNull();
+        imageContent.MimeType.Should().Be("image/png");
     }
 
     [Fact]
@@ -113,8 +115,8 @@ public class ConversationalImageGenerationTests
             Size = "1024x1024"
         };
 
-        Assert.Equal(3, request.Conversation.Count);
-        Assert.NotNull(request.Conversation[2].Images);
+        request.Conversation.Count.Should().Be(3);
+        request.Conversation[2].Images.Should().NotBeNull();
     }
 
     [Fact]
@@ -154,7 +156,7 @@ public class ConversationalImageGenerationTests
 
         var result = await mockProvider.Object.GenerateImageFromConversationAsync(request);
 
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         mockProvider.Verify(p => p.GenerateImageAsync(It.IsAny<CoreImageRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -173,8 +175,8 @@ public class ConversationalImageGenerationTests
             }
         };
 
-        Assert.True(capabilities.SupportsMultiModalInput);
-        Assert.Equal(5, capabilities.MaxConversationImages);
-        Assert.Contains(ImageOperation.GenerateFromConversation, capabilities.SupportedOperations);
+        capabilities.SupportsMultiModalInput.Should().BeTrue();
+        capabilities.MaxConversationImages.Should().Be(5);
+        capabilities.SupportedOperations.Should().Contain(ImageOperation.GenerateFromConversation);
     }
 }

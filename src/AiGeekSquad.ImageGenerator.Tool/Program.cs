@@ -23,40 +23,57 @@ builder.Configuration
 // Register provider loader
 builder.Services.AddSingleton<IProviderLoader, AssemblyProviderLoader>();
 
-// Register built-in providers
-builder.Services.AddSingleton<IImageGenerationProvider>(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-    var apiKey = config["OpenAI:ApiKey"] ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-    var endpoint = config["OpenAI:Endpoint"];
-    var defaultModel = config["OpenAI:DefaultModel"];
-    
-    if (string.IsNullOrEmpty(apiKey))
-    {
-        sp.GetRequiredService<ILogger<Program>>().LogWarning(
-            "OpenAI API key not configured. OpenAI provider will not be available. Set OPENAI_API_KEY environment variable or add to appsettings.json");
-        return null!;
-    }
-    
-    return new OpenAIImageProvider(apiKey, endpoint, defaultModel);
-});
+// Register HttpClient for providers
+builder.Services.AddHttpClient();
 
-builder.Services.AddSingleton<IImageGenerationProvider>(sp =>
+// Check if at least one provider is configured
+var openAiApiKey = builder.Configuration["OpenAI:ApiKey"] ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+var googleProjectId = builder.Configuration["Google:ProjectId"] ?? Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID");
+
+if (string.IsNullOrEmpty(openAiApiKey) && string.IsNullOrEmpty(googleProjectId))
 {
-    var config = sp.GetRequiredService<IConfiguration>();
-    var projectId = config["Google:ProjectId"] ?? Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID");
-    var location = config["Google:Location"] ?? "us-central1";
-    var defaultModel = config["Google:DefaultModel"];
-    
-    if (string.IsNullOrEmpty(projectId))
+    throw new InvalidOperationException(
+        "No image generation providers are configured. " +
+        "Please configure at least one provider by setting either:\n" +
+        "- OPENAI_API_KEY environment variable or OpenAI:ApiKey in appsettings.json\n" +
+        "- GOOGLE_PROJECT_ID environment variable or Google:ProjectId in appsettings.json");
+}
+
+// Register built-in providers
+if (!string.IsNullOrEmpty(openAiApiKey))
+{
+    builder.Services.AddSingleton<IImageGenerationProvider>(sp =>
     {
-        sp.GetRequiredService<ILogger<Program>>().LogWarning(
-            "Google Cloud project ID not configured. Google provider will not be available.");
-        return null!;
-    }
-    
-    return new GoogleImageProvider(projectId, location, defaultModel);
-});
+        var config = sp.GetRequiredService<IConfiguration>();
+        var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+        var httpClient = httpClientFactory.CreateClient("OpenAI");
+        var endpoint = config["OpenAI:Endpoint"];
+        var defaultModel = config["OpenAI:DefaultModel"];
+        
+        var logger = sp.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Registering OpenAI provider with model: {Model}", defaultModel ?? "dall-e-3");
+        
+        return new OpenAIImageProvider(openAiApiKey, endpoint, defaultModel, httpClient);
+    });
+}
+
+if (!string.IsNullOrEmpty(googleProjectId))
+{
+    builder.Services.AddSingleton<IImageGenerationProvider>(sp =>
+    {
+        var config = sp.GetRequiredService<IConfiguration>();
+        var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+        var httpClient = httpClientFactory.CreateClient("Google");
+        var location = config["Google:Location"] ?? "us-central1";
+        var defaultModel = config["Google:DefaultModel"];
+        
+        var logger = sp.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Registering Google provider with project: {ProjectId}, location: {Location}", 
+            googleProjectId, location);
+        
+        return new GoogleImageProvider(googleProjectId, location, defaultModel, httpClient);
+    });
+}
 
 // Load external providers from assemblies if specified via command line or config
 var providerAssemblies = builder.Configuration.GetSection("ExternalProviders:Assemblies").Get<string[]>()

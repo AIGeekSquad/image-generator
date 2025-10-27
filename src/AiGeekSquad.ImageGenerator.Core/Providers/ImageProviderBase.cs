@@ -14,6 +14,16 @@ namespace AiGeekSquad.ImageGenerator.Core.Providers;
 /// </summary>
 public abstract class ImageProviderBase : IImageGenerationProvider
 {
+    // Shared HttpClient for downloading images from URLs
+    private static readonly HttpClient SharedHttpClient = new();
+    
+    protected readonly HttpClient HttpClient;
+
+    protected ImageProviderBase(HttpClient? httpClient = null)
+    {
+        HttpClient = httpClient ?? SharedHttpClient;
+    }
+
     public abstract string ProviderName { get; }
 
     protected abstract ProviderCapabilities Capabilities { get; }
@@ -143,7 +153,7 @@ public abstract class ImageProviderBase : IImageGenerationProvider
     /// <summary>
     /// Helper to convert image data to stream
     /// </summary>
-    protected static Stream ConvertToStream(string imageData)
+    protected async Task<Stream> ConvertToStreamAsync(string imageData, CancellationToken cancellationToken = default)
     {
         if (imageData.StartsWith("data:image"))
         {
@@ -154,9 +164,8 @@ public abstract class ImageProviderBase : IImageGenerationProvider
         }
         else if (imageData.StartsWith("http"))
         {
-            // URL - download the image
-            using var httpClient = new HttpClient();
-            var bytes = httpClient.GetByteArrayAsync(imageData).Result;
+            // URL - download the image using the HttpClient instance
+            var bytes = await HttpClient.GetByteArrayAsync(imageData, cancellationToken);
             return new MemoryStream(bytes);
         }
         else

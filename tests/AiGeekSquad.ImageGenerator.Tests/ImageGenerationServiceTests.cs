@@ -3,6 +3,8 @@ using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Services;
 using Microsoft.Extensions.AI;
 using Moq;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 
@@ -27,9 +29,12 @@ public class ImageGenerationServiceTests
         var result = service.GetProviders();
 
         // Assert
-        Assert.Equal(2, result.Count);
-        Assert.Contains(result, p => p.ProviderName == "Provider1");
-        Assert.Contains(result, p => p.ProviderName == "Provider2");
+        using (new AssertionScope())
+        {
+            result.Should().HaveCount(2);
+            result.Should().Contain(p => p.ProviderName == "Provider1");
+            result.Should().Contain(p => p.ProviderName == "Provider2");
+        }
     }
 
     [Fact]
@@ -46,8 +51,11 @@ public class ImageGenerationServiceTests
         var result = service.GetProvider("TestProvider");
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal("TestProvider", result.ProviderName);
+        using (new AssertionScope())
+        {
+            result.Should().NotBeNull();
+            result!.ProviderName.Should().Be("TestProvider");
+        }
     }
 
     [Fact]
@@ -64,7 +72,7 @@ public class ImageGenerationServiceTests
         var result = service.GetProvider("NonExistentProvider");
 
         // Assert
-        Assert.Null(result);
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -93,9 +101,12 @@ public class ImageGenerationServiceTests
         var result = await service.GenerateImageAsync("TestProvider", request);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal("TestProvider", result.Provider);
-        provider.Verify(p => p.GenerateImageAsync(request, It.IsAny<CancellationToken>()), Times.Once);
+        using (new AssertionScope())
+        {
+            result.Should().NotBeNull();
+            result.Provider.Should().Be("TestProvider");
+            provider.Verify(p => p.GenerateImageAsync(request, It.IsAny<CancellationToken>()), Times.Once);
+        }
     }
 
     [Fact]
@@ -109,8 +120,8 @@ public class ImageGenerationServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            () => service.GenerateImageAsync("NonExistentProvider", request));
+        var act = async () => await service.GenerateImageAsync("NonExistentProvider", request);
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Fact]
@@ -129,7 +140,7 @@ public class ImageGenerationServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<NotSupportedException>(
-            () => service.GenerateImageAsync("TestProvider", request));
+        var act = async () => await service.GenerateImageAsync("TestProvider", request);
+        await act.Should().ThrowAsync<NotSupportedException>();
     }
 }

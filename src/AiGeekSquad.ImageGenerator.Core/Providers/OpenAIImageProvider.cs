@@ -24,7 +24,8 @@ public class OpenAIImageProvider : ImageProviderBase
 
     protected override ProviderCapabilities Capabilities { get; }
 
-    public OpenAIImageProvider(string apiKey, string? endpoint = null, string? defaultDeployment = null)
+    public OpenAIImageProvider(string apiKey, string? endpoint = null, string? defaultDeployment = null, HttpClient? httpClient = null)
+        : base(httpClient)
     {
         _defaultDeployment = defaultDeployment;
         
@@ -120,7 +121,7 @@ public class OpenAIImageProvider : ImageProviderBase
         // Extract text prompt from messages
         var prompt = ExtractTextFromMessages(request.Messages);
 
-        var imageStream = ConvertToStream(request.Image);
+        var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
         var imageName = "image.png";
 
         var result = await imageClient.GenerateImageEditAsync(
@@ -162,7 +163,7 @@ public class OpenAIImageProvider : ImageProviderBase
         var model = request.Model ?? ImageModels.OpenAI.DallE2;
         var imageClient = _client.GetImageClient(model);
 
-        var imageStream = ConvertToStream(request.Image);
+        var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
         var imageName = "image.png";
 
         var result = await imageClient.GenerateImageVariationAsync(

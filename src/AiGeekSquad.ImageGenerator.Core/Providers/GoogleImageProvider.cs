@@ -22,7 +22,8 @@ public class GoogleImageProvider : ImageProviderBase
 
     protected override ProviderCapabilities Capabilities { get; }
 
-    public GoogleImageProvider(string projectId, string location = "us-central1", string? defaultModel = null)
+    public GoogleImageProvider(string projectId, string location = "us-central1", string? defaultModel = null, HttpClient? httpClient = null)
+        : base(httpClient)
     {
         _projectId = projectId;
         _location = location;

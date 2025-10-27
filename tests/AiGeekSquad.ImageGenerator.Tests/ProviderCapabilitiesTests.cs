@@ -1,4 +1,6 @@
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
+using FluentAssertions;
+using FluentAssertions.Execution;
 
 namespace AiGeekSquad.ImageGenerator.Tests;
 
@@ -21,11 +23,14 @@ public class ProviderCapabilitiesTests
         };
 
         // Assert
-        Assert.Equal(2, capabilities.ExampleModels.Count);
-        Assert.Single(capabilities.SupportedOperations);
-        Assert.Equal("model1", capabilities.DefaultModel);
-        Assert.True(capabilities.AcceptsCustomModels);
-        Assert.Single(capabilities.Features);
+        using (new AssertionScope())
+        {
+            capabilities.ExampleModels.Should().HaveCount(2);
+            capabilities.SupportedOperations.Should().ContainSingle();
+            capabilities.DefaultModel.Should().Be("model1");
+            capabilities.AcceptsCustomModels.Should().BeTrue();
+            capabilities.Features.Should().ContainSingle();
+        }
     }
 
     [Fact]
@@ -35,10 +40,13 @@ public class ProviderCapabilitiesTests
         var capabilities = new ProviderCapabilities();
 
         // Assert
-        Assert.Empty(capabilities.ExampleModels);
-        Assert.Empty(capabilities.SupportedOperations);
-        Assert.Null(capabilities.DefaultModel);
-        Assert.True(capabilities.AcceptsCustomModels); // Default is true
-        Assert.Empty(capabilities.Features);
+        using (new AssertionScope())
+        {
+            capabilities.ExampleModels.Should().BeEmpty();
+            capabilities.SupportedOperations.Should().BeEmpty();
+            capabilities.DefaultModel.Should().BeNull();
+            capabilities.AcceptsCustomModels.Should().BeTrue(); // Default is true
+            capabilities.Features.Should().BeEmpty();
+        }
     }
 }

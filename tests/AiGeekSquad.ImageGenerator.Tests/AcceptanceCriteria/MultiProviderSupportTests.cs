@@ -1,4 +1,6 @@
 using Microsoft.Extensions.AI;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
@@ -17,19 +19,19 @@ public class MultiProviderSupportTests
     public void AC1_OpenAI_ModelsAreDefined()
     {
         // Acceptance Criteria: Tool should support OpenAI DALL-E 2, DALL-E 3, GPT Image 1, and future models
-        Assert.NotEmpty(ImageModels.OpenAI.DallE2);
-        Assert.NotEmpty(ImageModels.OpenAI.DallE3);
-        Assert.NotEmpty(ImageModels.OpenAI.GPTImage1);
-        Assert.NotEmpty(ImageModels.OpenAI.GPT5Image);
+        ImageModels.OpenAI.DallE2.Should().NotBeEmpty();
+        ImageModels.OpenAI.DallE3.Should().NotBeEmpty();
+        ImageModels.OpenAI.GPTImage1.Should().NotBeEmpty();
+        ImageModels.OpenAI.GPT5Image.Should().NotBeEmpty();
     }
 
     [Fact]
     public void AC2_Google_ModelsAreDefined()
     {
         // Acceptance Criteria: Tool should support Google Imagen models
-        Assert.NotEmpty(ImageModels.Google.Imagen2);
-        Assert.NotEmpty(ImageModels.Google.Imagen3);
-        Assert.NotEmpty(ImageModels.Google.ImagenFast);
+        ImageModels.Google.Imagen2.Should().NotBeEmpty();
+        ImageModels.Google.Imagen3.Should().NotBeEmpty();
+        ImageModels.Google.ImagenFast.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -47,10 +49,10 @@ public class MultiProviderSupportTests
             }
         };
 
-        Assert.NotNull(request.AdditionalParameters);
-        Assert.Equal(2, request.AdditionalParameters.Count);
-        Assert.Equal("value1", request.AdditionalParameters["customParam1"]);
-        Assert.Equal(42, request.AdditionalParameters["customParam2"]);
+        request.AdditionalParameters.Should().NotBeNull();
+        request.AdditionalParameters.Count.Should().Be(2);
+        request.AdditionalParameters["customParam1"].Should().Be("value1");
+        request.AdditionalParameters["customParam2"].Should().Be(42);
     }
 
     [Fact]
@@ -64,8 +66,8 @@ public class MultiProviderSupportTests
             Style = ImageModels.Style.Vivid
         };
 
-        Assert.Equal(ImageModels.Quality.HD, request.Quality);
-        Assert.Equal(ImageModels.Style.Vivid, request.Style);
+        request.Quality.Should().Be(ImageModels.Quality.HD);
+        request.Style.Should().Be(ImageModels.Style.Vivid);
     }
 
     [Fact]
@@ -89,7 +91,7 @@ public class MultiProviderSupportTests
                 Size = size
             };
 
-            Assert.Equal(size, request.Size);
+            request.Size.Should().Be(size);
         }
     }
 
@@ -103,7 +105,7 @@ public class MultiProviderSupportTests
             NumberOfImages = 4
         };
 
-        Assert.Equal(4, request.NumberOfImages);
+        request.NumberOfImages.Should().Be(4);
     }
 
     [Fact]
@@ -118,8 +120,8 @@ public class MultiProviderSupportTests
             CreatedAt = DateTime.UtcNow
         };
 
-        Assert.Equal("dall-e-3", response.Model);
-        Assert.Equal("OpenAI", response.Provider);
+        response.Model.Should().Be("dall-e-3");
+        response.Provider.Should().Be("OpenAI");
         Assert.NotEqual(default, response.CreatedAt);
     }
 
@@ -137,9 +139,9 @@ public class MultiProviderSupportTests
             Base64Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQ="
         };
 
-        Assert.NotNull(imageWithUrl.Url);
-        Assert.Null(imageWithUrl.Base64Data);
-        Assert.NotNull(imageWithBase64.Base64Data);
-        Assert.Null(imageWithBase64.Url);
+        imageWithUrl.Url.Should().NotBeNull();
+        imageWithUrl.Base64Data.Should().BeNull();
+        imageWithBase64.Base64Data.Should().NotBeNull();
+        imageWithBase64.Url.Should().BeNull();
     }
 }
