@@ -51,7 +51,7 @@ if (!string.IsNullOrEmpty(openAiApiKey))
         var defaultModel = config["OpenAI:DefaultModel"];
         
         var logger = sp.GetRequiredService<ILogger<Program>>();
-        logger.LogInformation("Registering OpenAI provider with model: {Model}", defaultModel ?? "dall-e-3");
+        logger.LogInformation("Registering OpenAI provider (API key configured)");
         
         return new OpenAIImageProvider(openAiApiKey, endpoint, defaultModel, httpClient);
     });
@@ -68,8 +68,8 @@ if (!string.IsNullOrEmpty(googleProjectId))
         var defaultModel = config["Google:DefaultModel"];
         
         var logger = sp.GetRequiredService<ILogger<Program>>();
-        logger.LogInformation("Registering Google provider with project: {ProjectId}, location: {Location}", 
-            googleProjectId, location);
+        logger.LogInformation("Registering Google provider (project ID configured), location: {Location}", 
+            location);
         
         return new GoogleImageProvider(googleProjectId, location, defaultModel, httpClient);
     });
