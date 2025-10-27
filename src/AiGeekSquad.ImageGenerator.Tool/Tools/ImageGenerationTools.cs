@@ -1,9 +1,14 @@
 using System.ComponentModel;
 using System.Text.Json;
-using AiGeekSquad.ImageGenerator.Core.Abstractions;
-using AiGeekSquad.ImageGenerator.Core.Models;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
+using AiGeekSquad.ImageGenerator.Core.Abstractions;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
+using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
+using CoreConversationalRequest = AiGeekSquad.ImageGenerator.Core.Models.ConversationalImageGenerationRequest;
+using CoreConversationMessage = AiGeekSquad.ImageGenerator.Core.Models.ConversationMessage;
 
 namespace AiGeekSquad.ImageGenerator.Tool.Tools;
 
@@ -28,9 +33,15 @@ internal class ImageGenerationTools(
     {
         try
         {
-            var request = new ImageGenerationRequest
+            // Create a ChatMessage with the text prompt
+            var messages = new List<ChatMessage>
             {
-                Prompt = prompt,
+                new ChatMessage(ChatRole.User, prompt)
+            };
+
+            var request = new CoreImageRequest
+            {
+                Messages = messages,
                 Model = model,
                 Size = size,
                 Quality = quality,
@@ -65,13 +76,13 @@ internal class ImageGenerationTools(
     {
         try
         {
-            var conversation = JsonSerializer.Deserialize<List<ConversationMessage>>(conversationJson);
+            var conversation = JsonSerializer.Deserialize<List<CoreConversationMessage>>(conversationJson);
             if (conversation == null || conversation.Count == 0)
             {
                 return JsonSerializer.Serialize(new { error = "Conversation is required and must contain at least one message" });
             }
 
-            var request = new ConversationalImageGenerationRequest
+            var request = new CoreConversationalRequest
             {
                 Conversation = conversation,
                 Model = model,
@@ -112,10 +123,16 @@ internal class ImageGenerationTools(
     {
         try
         {
-            var request = new ImageEditRequest
+            // Create a ChatMessage with the edit prompt
+            var messages = new List<ChatMessage>
+            {
+                new ChatMessage(ChatRole.User, prompt)
+            };
+
+            var request = new CoreImageEditRequest
             {
                 Image = image,
-                Prompt = prompt,
+                Messages = messages,
                 Mask = mask,
                 Model = model,
                 Size = size,
@@ -146,7 +163,7 @@ internal class ImageGenerationTools(
     {
         try
         {
-            var request = new ImageVariationRequest
+            var request = new CoreImageVariationRequest
             {
                 Image = image,
                 Model = model,

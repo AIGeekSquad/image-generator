@@ -1,7 +1,13 @@
+using Microsoft.Extensions.AI;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Services;
 using Moq;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
+using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
+using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
+using CoreConversationalRequest = AiGeekSquad.ImageGenerator.Core.Models.ConversationalImageGenerationRequest;
 
 namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
 
@@ -78,8 +84,8 @@ public class ExtensibilityTests
         var provider1 = new Mock<IImageGenerationProvider>();
         provider1.Setup(p => p.ProviderName).Returns("Provider1");
         provider1.Setup(p => p.SupportsOperation(ImageOperation.Generate)).Returns(true);
-        provider1.Setup(p => p.GenerateImageAsync(It.IsAny<ImageGenerationRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImageGenerationResponse
+        provider1.Setup(p => p.GenerateImageAsync(It.IsAny<CoreImageRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CoreImageResponse
             {
                 Images = new List<GeneratedImage>(),
                 Model = "model1",
@@ -91,12 +97,12 @@ public class ExtensibilityTests
 
         var service = new ImageGenerationService(new[] { provider1.Object, provider2.Object });
 
-        var request = new ImageGenerationRequest { Prompt = "test" };
+        var request = new CoreImageRequest { Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") } };
         var result = await service.GenerateImageAsync("Provider1", request);
 
         Assert.Equal("Provider1", result.Provider);
         provider1.Verify(p => p.GenerateImageAsync(request, It.IsAny<CancellationToken>()), Times.Once);
-        provider2.Verify(p => p.GenerateImageAsync(It.IsAny<ImageGenerationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+        provider2.Verify(p => p.GenerateImageAsync(It.IsAny<CoreImageRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // Helper custom provider for testing
@@ -104,9 +110,9 @@ public class ExtensibilityTests
     {
         public string ProviderName => "CustomTest";
 
-        public Task<ImageGenerationResponse> GenerateImageAsync(ImageGenerationRequest request, CancellationToken cancellationToken = default)
+        public Task<CoreImageResponse> GenerateImageAsync(CoreImageRequest request, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(new ImageGenerationResponse
+            return Task.FromResult(new CoreImageResponse
             {
                 Images = new List<GeneratedImage>(),
                 Model = request.Model ?? "default",
@@ -114,17 +120,17 @@ public class ExtensibilityTests
             });
         }
 
-        public Task<ImageGenerationResponse> GenerateImageFromConversationAsync(ConversationalImageGenerationRequest request, CancellationToken cancellationToken = default)
+        public Task<CoreImageResponse> GenerateImageFromConversationAsync(CoreConversationalRequest request, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<ImageGenerationResponse> EditImageAsync(ImageEditRequest request, CancellationToken cancellationToken = default)
+        public Task<CoreImageResponse> EditImageAsync(CoreImageEditRequest request, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Task<ImageGenerationResponse> CreateVariationAsync(ImageVariationRequest request, CancellationToken cancellationToken = default)
+        public Task<CoreImageResponse> CreateVariationAsync(CoreImageVariationRequest request, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

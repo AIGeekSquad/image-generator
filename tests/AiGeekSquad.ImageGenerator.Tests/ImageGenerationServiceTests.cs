@@ -1,7 +1,10 @@
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Services;
+using Microsoft.Extensions.AI;
 using Moq;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 
 namespace AiGeekSquad.ImageGenerator.Tests;
 
@@ -71,8 +74,8 @@ public class ImageGenerationServiceTests
         var provider = new Mock<IImageGenerationProvider>();
         provider.Setup(p => p.ProviderName).Returns("TestProvider");
         provider.Setup(p => p.SupportsOperation(ImageOperation.Generate)).Returns(true);
-        provider.Setup(p => p.GenerateImageAsync(It.IsAny<ImageGenerationRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImageGenerationResponse
+        provider.Setup(p => p.GenerateImageAsync(It.IsAny<CoreImageRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CoreImageResponse
             {
                 Images = new List<GeneratedImage>(),
                 Model = "test-model",
@@ -81,7 +84,10 @@ public class ImageGenerationServiceTests
         
         var providers = new List<IImageGenerationProvider> { provider.Object };
         var service = new ImageGenerationService(providers);
-        var request = new ImageGenerationRequest { Prompt = "test" };
+        var request = new CoreImageRequest 
+        { 
+            Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") }
+        };
 
         // Act
         var result = await service.GenerateImageAsync("TestProvider", request);
@@ -97,7 +103,10 @@ public class ImageGenerationServiceTests
     {
         // Arrange
         var service = new ImageGenerationService(new List<IImageGenerationProvider>());
-        var request = new ImageGenerationRequest { Prompt = "test" };
+        var request = new CoreImageRequest 
+        { 
+            Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") }
+        };
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
@@ -114,7 +123,10 @@ public class ImageGenerationServiceTests
         
         var providers = new List<IImageGenerationProvider> { provider.Object };
         var service = new ImageGenerationService(providers);
-        var request = new ImageGenerationRequest { Prompt = "test" };
+        var request = new CoreImageRequest 
+        { 
+            Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") }
+        };
 
         // Act & Assert
         await Assert.ThrowsAsync<NotSupportedException>(

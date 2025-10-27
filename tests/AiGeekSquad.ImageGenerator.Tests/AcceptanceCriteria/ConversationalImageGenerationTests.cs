@@ -1,3 +1,9 @@
+using Microsoft.Extensions.AI;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
+using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
+using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
+using CoreConversationalRequest = AiGeekSquad.ImageGenerator.Core.Models.ConversationalImageGenerationRequest;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using Moq;
@@ -118,8 +124,8 @@ public class ConversationalImageGenerationTests
         var mockProvider = new Mock<IImageGenerationProvider>();
         mockProvider.Setup(p => p.ProviderName).Returns("TestProvider");
         mockProvider.Setup(p => p.SupportsOperation(ImageOperation.GenerateFromConversation)).Returns(false);
-        mockProvider.Setup(p => p.GenerateImageAsync(It.IsAny<ImageGenerationRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImageGenerationResponse
+        mockProvider.Setup(p => p.GenerateImageAsync(It.IsAny<CoreImageRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CoreImageResponse
             {
                 Images = new List<GeneratedImage>(),
                 Model = "test-model",
@@ -139,16 +145,17 @@ public class ConversationalImageGenerationTests
             .Returns<ConversationalImageGenerationRequest, CancellationToken>((req, ct) =>
             {
                 // Simulate fallback behavior
-                return mockProvider.Object.GenerateImageAsync(new ImageGenerationRequest
+                var text = req.Conversation.FirstOrDefault()?.Text ?? "";
+                return mockProvider.Object.GenerateImageAsync(new CoreImageRequest
                 {
-                    Prompt = req.Conversation.FirstOrDefault()?.Text ?? ""
+                    Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, text) }
                 }, ct);
             });
 
         var result = await mockProvider.Object.GenerateImageFromConversationAsync(request);
 
         Assert.NotNull(result);
-        mockProvider.Verify(p => p.GenerateImageAsync(It.IsAny<ImageGenerationRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+        mockProvider.Verify(p => p.GenerateImageAsync(It.IsAny<CoreImageRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

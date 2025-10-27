@@ -1,3 +1,5 @@
+using Microsoft.Extensions.AI;
+
 namespace AiGeekSquad.ImageGenerator.Core.Models;
 
 /// <summary>
@@ -11,9 +13,10 @@ public record ImageEditRequest
     public required string Image { get; init; }
 
     /// <summary>
-    /// The prompt describing the desired changes
+    /// The messages containing the prompt and optional images/attachments describing the desired changes
+    /// Uses Microsoft.Extensions.AI.ChatMessage for multi-modal support
     /// </summary>
-    public required string Prompt { get; init; }
+    public required IList<ChatMessage> Messages { get; init; }
 
     /// <summary>
     /// Optional mask image (base64 encoded or URL)

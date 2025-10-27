@@ -1,9 +1,14 @@
 using Azure.AI.OpenAI;
 using OpenAI;
+using OpenAI.Images;
+using Microsoft.Extensions.AI;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
+using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
+using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
+using GeneratedImageModel = AiGeekSquad.ImageGenerator.Core.Models.GeneratedImage;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
-using OpenAI.Images;
-using GeneratedImageModel = AiGeekSquad.ImageGenerator.Core.Models.GeneratedImage;
 
 namespace AiGeekSquad.ImageGenerator.Core.Providers;
 
@@ -61,14 +66,17 @@ public class OpenAIImageProvider : ImageProviderBase
         };
     }
 
-    public override async Task<ImageGenerationResponse> GenerateImageAsync(
-        ImageGenerationRequest request,
+    public override async Task<CoreImageResponse> GenerateImageAsync(
+        CoreImageRequest request,
         CancellationToken cancellationToken = default)
     {
         var model = GetModelOrDefault(request.Model);
         var imageClient = _client.GetImageClient(model);
 
-        var options = new ImageGenerationOptions
+        // Extract text prompt from messages
+        var prompt = ExtractTextFromMessages(request.Messages);
+
+        var options = new OpenAI.Images.ImageGenerationOptions
         {
             Size = ParseSize(request.Size),
             Quality = ParseQuality(request.Quality),
@@ -77,7 +85,7 @@ public class OpenAIImageProvider : ImageProviderBase
         };
 
         var result = await imageClient.GenerateImageAsync(
-            request.Prompt,
+            prompt,
             options,
             cancellationToken);
 
@@ -92,7 +100,7 @@ public class OpenAIImageProvider : ImageProviderBase
             });
         }
 
-        return new ImageGenerationResponse
+        return new CoreImageResponse
         {
             Images = images,
             Model = model,
@@ -101,13 +109,16 @@ public class OpenAIImageProvider : ImageProviderBase
         };
     }
 
-    public override async Task<ImageGenerationResponse> EditImageAsync(
-        ImageEditRequest request,
+    public override async Task<CoreImageResponse> EditImageAsync(
+        CoreImageEditRequest request,
         CancellationToken cancellationToken = default)
     {
         // Use the requested model or fall back to DALL-E 2 for editing
         var model = request.Model ?? ImageModels.OpenAI.DallE2;
         var imageClient = _client.GetImageClient(model);
+
+        // Extract text prompt from messages
+        var prompt = ExtractTextFromMessages(request.Messages);
 
         var imageStream = ConvertToStream(request.Image);
         var imageName = "image.png";
@@ -115,7 +126,7 @@ public class OpenAIImageProvider : ImageProviderBase
         var result = await imageClient.GenerateImageEditAsync(
             imageStream,
             imageName,
-            request.Prompt,
+            prompt,
             new ImageEditOptions
             {
                 Size = ParseSize(request.Size),
@@ -134,7 +145,7 @@ public class OpenAIImageProvider : ImageProviderBase
             });
         }
 
-        return new ImageGenerationResponse
+        return new CoreImageResponse
         {
             Images = images,
             Model = model,
@@ -143,8 +154,8 @@ public class OpenAIImageProvider : ImageProviderBase
         };
     }
 
-    public override async Task<ImageGenerationResponse> CreateVariationAsync(
-        ImageVariationRequest request,
+    public override async Task<CoreImageResponse> CreateVariationAsync(
+        CoreImageVariationRequest request,
         CancellationToken cancellationToken = default)
     {
         // Use the requested model or fall back to DALL-E 2 for variations
@@ -174,7 +185,7 @@ public class OpenAIImageProvider : ImageProviderBase
             });
         }
 
-        return new ImageGenerationResponse
+        return new CoreImageResponse
         {
             Images = images,
             Model = model,

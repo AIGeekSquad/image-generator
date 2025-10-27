@@ -1,14 +1,17 @@
+using Microsoft.Extensions.AI;
+
 namespace AiGeekSquad.ImageGenerator.Core.Models;
 
 /// <summary>
-/// Request for generating an image
+/// Request for generating an image from a conversation/messages
 /// </summary>
 public record ImageGenerationRequest
 {
     /// <summary>
-    /// The prompt to generate the image from
+    /// The messages containing the prompt and optional images/attachments
+    /// Uses Microsoft.Extensions.AI.ChatMessage for multi-modal support
     /// </summary>
-    public required string Prompt { get; init; }
+    public required IList<ChatMessage> Messages { get; init; }
 
     /// <summary>
     /// The model to use for generation

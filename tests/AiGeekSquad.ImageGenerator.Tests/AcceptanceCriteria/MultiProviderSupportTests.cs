@@ -1,3 +1,9 @@
+using Microsoft.Extensions.AI;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
+using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
+using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
+using CoreConversationalRequest = AiGeekSquad.ImageGenerator.Core.Models.ConversationalImageGenerationRequest;
 using AiGeekSquad.ImageGenerator.Core.Models;
 
 namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
@@ -30,9 +36,9 @@ public class MultiProviderSupportTests
     public void AC3_ImageRequest_SupportsProviderSpecificParameters()
     {
         // Acceptance Criteria: Requests should support provider-specific parameters
-        var request = new ImageGenerationRequest
+        var request = new CoreImageRequest
         {
-            Prompt = "test",
+            Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") },
             Model = "dall-e-3",
             AdditionalParameters = new Dictionary<string, object>
             {
@@ -51,9 +57,9 @@ public class MultiProviderSupportTests
     public void AC4_ImageRequest_SupportsQualityAndStyle()
     {
         // Acceptance Criteria: Tool should support quality and style parameters
-        var request = new ImageGenerationRequest
+        var request = new CoreImageRequest
         {
-            Prompt = "test",
+            Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") },
             Quality = ImageModels.Quality.HD,
             Style = ImageModels.Style.Vivid
         };
@@ -77,9 +83,9 @@ public class MultiProviderSupportTests
 
         foreach (var size in sizes)
         {
-            var request = new ImageGenerationRequest
+            var request = new CoreImageRequest
             {
-                Prompt = "test",
+                Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") },
                 Size = size
             };
 
@@ -91,9 +97,9 @@ public class MultiProviderSupportTests
     public void AC6_ImageRequest_SupportsMultipleImages()
     {
         // Acceptance Criteria: Tool should support generating multiple images in a single request
-        var request = new ImageGenerationRequest
+        var request = new CoreImageRequest
         {
-            Prompt = "test",
+            Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") },
             NumberOfImages = 4
         };
 
@@ -104,7 +110,7 @@ public class MultiProviderSupportTests
     public void AC7_ImageResponse_ContainsProviderAndModelInfo()
     {
         // Acceptance Criteria: Responses should contain information about the provider and model used
-        var response = new ImageGenerationResponse
+        var response = new CoreImageResponse
         {
             Images = new List<GeneratedImage>(),
             Model = "dall-e-3",

@@ -1,3 +1,8 @@
+using Microsoft.Extensions.AI;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
+using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
+using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using Moq;
@@ -16,11 +21,14 @@ public class ImageEditingTests
         var request = new ImageEditRequest
         {
             Image = "base64_encoded_image_data",
-            Prompt = "Add a sunset in the background"
+            Messages = new List<ChatMessage> 
+            { 
+                new ChatMessage(ChatRole.User, "Add a sunset in the background") 
+            }
         };
 
         Assert.NotEmpty(request.Image);
-        Assert.NotEmpty(request.Prompt);
+        Assert.NotNull(request.Messages);
     }
 
     [Fact]
@@ -30,7 +38,10 @@ public class ImageEditingTests
         var request = new ImageEditRequest
         {
             Image = "base64_encoded_image_data",
-            Prompt = "Change the color to blue",
+            Messages = new List<ChatMessage> 
+            { 
+                new ChatMessage(ChatRole.User, "Change the color to blue") 
+            },
             Mask = "base64_encoded_mask_data"
         };
 

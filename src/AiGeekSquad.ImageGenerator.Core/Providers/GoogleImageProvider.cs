@@ -1,7 +1,11 @@
 using Google.Cloud.AIPlatform.V1;
+using System.Text.Json;
+using Microsoft.Extensions.AI;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
+using GeneratedImageModel = AiGeekSquad.ImageGenerator.Core.Models.GeneratedImage;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
-using System.Text.Json;
 
 namespace AiGeekSquad.ImageGenerator.Core.Providers;
 
@@ -48,13 +52,16 @@ public class GoogleImageProvider : ImageProviderBase
         };
     }
 
-    public override async Task<ImageGenerationResponse> GenerateImageAsync(
-        ImageGenerationRequest request,
+    public override async Task<CoreImageResponse> GenerateImageAsync(
+        CoreImageRequest request,
         CancellationToken cancellationToken = default)
     {
         var model = GetModelOrDefault(request.Model);
         
         var endpoint = $"projects/{_projectId}/locations/{_location}/publishers/google/models/{model}";
+
+        // Extract text prompt from messages
+        var prompt = ExtractTextFromMessages(request.Messages);
 
         var parameters = new Dictionary<string, object>
         {
@@ -83,7 +90,7 @@ public class GoogleImageProvider : ImageProviderBase
 
         var instances = new[]
         {
-            new { prompt = request.Prompt }
+            new { prompt = prompt }
         };
 
         var instancesValue = Google.Protobuf.WellKnownTypes.Value.Parser.ParseJson(
@@ -101,7 +108,7 @@ public class GoogleImageProvider : ImageProviderBase
 
         var response = await _client.PredictAsync(predictRequest, cancellationToken);
 
-        var images = new List<GeneratedImage>();
+        var images = new List<GeneratedImageModel>();
         
         foreach (var prediction in response.Predictions)
         {
@@ -110,14 +117,14 @@ public class GoogleImageProvider : ImageProviderBase
 
             if (predictionDict != null && predictionDict.TryGetValue("bytesBase64Encoded", out var imageData))
             {
-                images.Add(new GeneratedImage
+                images.Add(new GeneratedImageModel
                 {
                     Base64Data = imageData.GetString()
                 });
             }
         }
 
-        return new ImageGenerationResponse
+        return new CoreImageResponse
         {
             Images = images,
             Model = model,

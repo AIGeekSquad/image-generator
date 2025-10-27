@@ -1,5 +1,11 @@
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
-using AiGeekSquad.ImageGenerator.Core.Models;
+using Microsoft.Extensions.AI;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
+using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
+using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
+using CoreConversationMessage = AiGeekSquad.ImageGenerator.Core.Models.ConversationMessage;
+using CoreConversationalRequest = AiGeekSquad.ImageGenerator.Core.Models.ConversationalImageGenerationRequest;
 
 namespace AiGeekSquad.ImageGenerator.Core.Providers;
 
@@ -14,21 +20,21 @@ public abstract class ImageProviderBase : IImageGenerationProvider
 
     public virtual ProviderCapabilities GetCapabilities() => Capabilities;
 
-    public abstract Task<ImageGenerationResponse> GenerateImageAsync(
-        ImageGenerationRequest request,
+    public abstract Task<CoreImageResponse> GenerateImageAsync(
+        CoreImageRequest request,
         CancellationToken cancellationToken = default);
 
-    public virtual Task<ImageGenerationResponse> GenerateImageFromConversationAsync(
-        ConversationalImageGenerationRequest request,
+    public virtual Task<CoreImageResponse> GenerateImageFromConversationAsync(
+        CoreConversationalRequest request,
         CancellationToken cancellationToken = default)
     {
         if (!SupportsOperation(ImageOperation.GenerateFromConversation))
         {
-            // Fallback: try to convert conversation to simple prompt
-            var prompt = ConvertConversationToPrompt(request.Conversation);
-            return GenerateImageAsync(new ImageGenerationRequest
+            // Fallback: convert conversation messages to ChatMessage format
+            var messages = ConvertConversationToChatMessages(request.Conversation);
+            return GenerateImageAsync(new CoreImageRequest
             {
-                Prompt = prompt,
+                Messages = messages,
                 Model = request.Model,
                 Size = request.Size,
                 Quality = request.Quality,
@@ -41,8 +47,8 @@ public abstract class ImageProviderBase : IImageGenerationProvider
         throw new NotImplementedException($"Conversational image generation not implemented for {ProviderName}");
     }
 
-    public virtual Task<ImageGenerationResponse> EditImageAsync(
-        ImageEditRequest request,
+    public virtual Task<CoreImageResponse> EditImageAsync(
+        CoreImageEditRequest request,
         CancellationToken cancellationToken = default)
     {
         if (!SupportsOperation(ImageOperation.Edit))
@@ -53,8 +59,8 @@ public abstract class ImageProviderBase : IImageGenerationProvider
         throw new NotImplementedException($"Image editing not implemented for {ProviderName}");
     }
 
-    public virtual Task<ImageGenerationResponse> CreateVariationAsync(
-        ImageVariationRequest request,
+    public virtual Task<CoreImageResponse> CreateVariationAsync(
+        CoreImageVariationRequest request,
         CancellationToken cancellationToken = default)
     {
         if (!SupportsOperation(ImageOperation.Variation))
@@ -77,6 +83,61 @@ public abstract class ImageProviderBase : IImageGenerationProvider
     {
         return requestedModel ?? Capabilities.DefaultModel ?? 
                throw new InvalidOperationException($"{ProviderName} has no default model configured");
+    }
+
+    /// <summary>
+    /// Extract text content from ChatMessages
+    /// </summary>
+    protected static string ExtractTextFromMessages(IList<ChatMessage> messages)
+    {
+        var textParts = new List<string>();
+        
+        foreach (var message in messages)
+        {
+            // Get text from message.Text property
+            if (!string.IsNullOrEmpty(message.Text))
+            {
+                textParts.Add(message.Text);
+            }
+            
+            // Also check Contents collection for TextContent
+            if (message.Contents != null)
+            {
+                foreach (var content in message.Contents)
+                {
+                    if (content is TextContent textContent && !string.IsNullOrEmpty(textContent.Text))
+                    {
+                        textParts.Add(textContent.Text);
+                    }
+                }
+            }
+        }
+        
+        return string.Join("\n", textParts);
+    }
+
+    /// <summary>
+    /// Extract image contents from ChatMessages
+    /// </summary>
+    protected static List<Microsoft.Extensions.AI.DataContent> ExtractImagesFromMessages(IList<ChatMessage> messages)
+    {
+        var images = new List<Microsoft.Extensions.AI.DataContent>();
+        
+        foreach (var message in messages)
+        {
+            if (message.Contents != null)
+            {
+                foreach (var content in message.Contents)
+                {
+                    if (content is Microsoft.Extensions.AI.DataContent dataContent)
+                    {
+                        images.Add(dataContent);
+                    }
+                }
+            }
+        }
+        
+        return images;
     }
 
     /// <summary>
@@ -117,31 +178,45 @@ public abstract class ImageProviderBase : IImageGenerationProvider
     }
 
     /// <summary>
-    /// Convert a conversation to a simple text prompt (fallback for providers that don't support conversational input)
+    /// Convert custom ConversationMessage format to Microsoft.Extensions.AI ChatMessage
     /// </summary>
-    protected virtual string ConvertConversationToPrompt(List<ConversationMessage> conversation)
+    protected virtual IList<ChatMessage> ConvertConversationToChatMessages(List<CoreConversationMessage> conversation)
     {
-        var promptParts = new List<string>();
+        var chatMessages = new List<ChatMessage>();
 
         foreach (var message in conversation)
         {
-            if (!string.IsNullOrEmpty(message.Text))
+            var role = message.Role?.ToLowerInvariant() switch
             {
-                promptParts.Add(message.Text);
-            }
+                "user" => ChatRole.User,
+                "assistant" => ChatRole.Assistant,
+                "system" => ChatRole.System,
+                _ => ChatRole.User
+            };
 
+            var chatMessage = new ChatMessage(role, message.Text ?? string.Empty);
+
+            // Add image contents if present
             if (message.Images != null && message.Images.Count > 0)
             {
                 foreach (var image in message.Images)
                 {
-                    if (!string.IsNullOrEmpty(image.Caption))
+                    if (!string.IsNullOrEmpty(image.Url))
                     {
-                        promptParts.Add($"[Reference image: {image.Caption}]");
+                        chatMessage.Contents.Add(new Microsoft.Extensions.AI.DataContent(new Uri(image.Url), "image/*"));
+                    }
+                    else if (!string.IsNullOrEmpty(image.Base64Data))
+                    {
+                        var bytes = Convert.FromBase64String(image.Base64Data);
+                        var mimeType = image.MimeType ?? "image/png";
+                        chatMessage.Contents.Add(new Microsoft.Extensions.AI.DataContent(bytes, mimeType));
                     }
                 }
             }
+
+            chatMessages.Add(chatMessage);
         }
 
-        return string.Join("\n", promptParts);
+        return chatMessages;
     }
 }
