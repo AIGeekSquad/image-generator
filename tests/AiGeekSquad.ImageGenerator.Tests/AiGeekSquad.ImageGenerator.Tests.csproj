@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/AiGeekSquad.ImageGenerator.Core/AiGeekSquad.ImageGenerator.Core.csproj" />
+    <ProjectReference Include="../../src/AiGeekSquad.ImageGenerator.Tool/AiGeekSquad.ImageGenerator.Tool.csproj" />
   </ItemGroup>
 
   <ItemGroup>
