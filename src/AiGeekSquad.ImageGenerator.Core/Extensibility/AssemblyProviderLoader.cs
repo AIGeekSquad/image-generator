@@ -11,11 +11,20 @@ public class AssemblyProviderLoader : IProviderLoader
 {
     private readonly ILogger<AssemblyProviderLoader> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the AssemblyProviderLoader
+    /// </summary>
+    /// <param name="logger">Logger for diagnostic messages</param>
     public AssemblyProviderLoader(ILogger<AssemblyProviderLoader> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Loads image generation providers from an external assembly
+    /// </summary>
+    /// <param name="assemblyPath">Path to the assembly file containing provider implementations</param>
+    /// <returns>Collection of loaded providers</returns>
     public IEnumerable<IImageGenerationProvider> LoadProvidersFromAssembly(string assemblyPath)
     {
         var providers = new List<IImageGenerationProvider>();

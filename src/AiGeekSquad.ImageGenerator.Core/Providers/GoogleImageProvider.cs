@@ -19,13 +19,23 @@ public class GoogleImageProvider : ImageProviderBase
     private readonly string _projectId;
     private readonly string _location;
 
+    /// <summary>
+    /// Gets the provider name
+    /// </summary>
     public override string ProviderName => "Google";
 
+    /// <summary>
+    /// Gets the provider capabilities
+    /// </summary>
     protected override ProviderCapabilities Capabilities { get; }
 
     /// <summary>
     /// Creates a Google provider with the specified configuration
     /// </summary>
+    /// <param name="projectId">Google Cloud project ID</param>
+    /// <param name="location">Google Cloud region (default: us-central1)</param>
+    /// <param name="defaultModel">Optional default model name</param>
+    /// <param name="httpClient">Optional HTTP client for downloading images</param>
     public GoogleImageProvider(string projectId, string location = "us-central1", string? defaultModel = null, HttpClient? httpClient = null)
         : this(new GoogleImageAdapter(PredictionServiceClient.Create()), projectId, location, defaultModel, httpClient)
     {
@@ -34,6 +44,11 @@ public class GoogleImageProvider : ImageProviderBase
     /// <summary>
     /// Creates a Google provider with a custom adapter (useful for testing)
     /// </summary>
+    /// <param name="adapter">Custom Google Image adapter implementation</param>
+    /// <param name="projectId">Google Cloud project ID</param>
+    /// <param name="location">Google Cloud region (default: us-central1)</param>
+    /// <param name="defaultModel">Optional default model name</param>
+    /// <param name="httpClient">Optional HTTP client for downloading images</param>
     public GoogleImageProvider(IGoogleImageAdapter adapter, string projectId, string location = "us-central1", string? defaultModel = null, HttpClient? httpClient = null)
         : base(httpClient)
     {
@@ -65,6 +80,12 @@ public class GoogleImageProvider : ImageProviderBase
         };
     }
 
+    /// <summary>
+    /// Generates an image using Google Imagen models
+    /// </summary>
+    /// <param name="request">Image generation request with messages and parameters</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response containing generated images in base64 format</returns>
     public override async Task<CoreImageResponse> GenerateImageAsync(
         CoreImageRequest request,
         CancellationToken cancellationToken = default)

@@ -20,13 +20,23 @@ public class OpenAIImageProvider : ImageProviderBase
     private readonly IOpenAIAdapter _adapter;
     private readonly string? _defaultDeployment;
 
+    /// <summary>
+    /// Gets the provider name
+    /// </summary>
     public override string ProviderName => "OpenAI";
 
+    /// <summary>
+    /// Gets the provider capabilities
+    /// </summary>
     protected override ProviderCapabilities Capabilities { get; }
 
     /// <summary>
     /// Creates an OpenAI provider with the specified configuration
     /// </summary>
+    /// <param name="apiKey">OpenAI API key</param>
+    /// <param name="endpoint">Optional Azure OpenAI endpoint URL</param>
+    /// <param name="defaultDeployment">Optional default model deployment name</param>
+    /// <param name="httpClient">Optional HTTP client for downloading images</param>
     public OpenAIImageProvider(string apiKey, string? endpoint = null, string? defaultDeployment = null, HttpClient? httpClient = null)
         : this(CreateAdapter(apiKey, endpoint), defaultDeployment, httpClient)
     {
@@ -35,6 +45,9 @@ public class OpenAIImageProvider : ImageProviderBase
     /// <summary>
     /// Creates an OpenAI provider with a custom adapter (useful for testing)
     /// </summary>
+    /// <param name="adapter">Custom OpenAI adapter implementation</param>
+    /// <param name="defaultDeployment">Optional default model deployment name</param>
+    /// <param name="httpClient">Optional HTTP client for downloading images</param>
     public OpenAIImageProvider(IOpenAIAdapter adapter, string? defaultDeployment = null, HttpClient? httpClient = null)
         : base(httpClient)
     {
@@ -86,6 +99,12 @@ public class OpenAIImageProvider : ImageProviderBase
         return new OpenAIAdapter(client);
     }
 
+    /// <summary>
+    /// Generates an image using OpenAI's image generation models
+    /// </summary>
+    /// <param name="request">Image generation request with messages and parameters</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response containing the generated image URL and optional revised prompt</returns>
     public override async Task<CoreImageResponse> GenerateImageAsync(
         CoreImageRequest request,
         CancellationToken cancellationToken = default)
@@ -109,6 +128,12 @@ public class OpenAIImageProvider : ImageProviderBase
             result.RevisedPrompt);
     }
 
+    /// <summary>
+    /// Edits an existing image based on a text prompt using DALL-E 2
+    /// </summary>
+    /// <param name="request">Image edit request with source image and instructions</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response containing the edited image URL and optional revised prompt</returns>
     public override async Task<CoreImageResponse> EditImageAsync(
         CoreImageEditRequest request,
         CancellationToken cancellationToken = default)
@@ -135,6 +160,12 @@ public class OpenAIImageProvider : ImageProviderBase
             result.RevisedPrompt);
     }
 
+    /// <summary>
+    /// Creates variations of an existing image using DALL-E 2
+    /// </summary>
+    /// <param name="request">Image variation request with source image</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response containing the variation image URL</returns>
     public override async Task<CoreImageResponse> CreateVariationAsync(
         CoreImageVariationRequest request,
         CancellationToken cancellationToken = default)

@@ -18,23 +18,52 @@ public abstract class ImageProviderBase : IImageGenerationProvider
     // Shared HttpClient for downloading images from URLs
     private static readonly HttpClient SharedHttpClient = new();
     
+    /// <summary>
+    /// HTTP client for downloading images from URLs
+    /// </summary>
     protected readonly HttpClient HttpClient;
 
+    /// <summary>
+    /// Initializes a new instance of the provider base class
+    /// </summary>
+    /// <param name="httpClient">Optional HTTP client for downloading images (uses shared client if not provided)</param>
     protected ImageProviderBase(HttpClient? httpClient = null)
     {
         HttpClient = httpClient ?? SharedHttpClient;
     }
 
+    /// <summary>
+    /// Gets the unique name of this provider
+    /// </summary>
     public abstract string ProviderName { get; }
 
+    /// <summary>
+    /// Gets the capabilities of this provider
+    /// </summary>
     protected abstract ProviderCapabilities Capabilities { get; }
 
+    /// <summary>
+    /// Gets the capabilities of this provider including supported operations and models
+    /// </summary>
+    /// <returns>Provider capabilities</returns>
     public virtual ProviderCapabilities GetCapabilities() => Capabilities;
 
+    /// <summary>
+    /// Generates an image from a text prompt
+    /// </summary>
+    /// <param name="request">Image generation request with messages and parameters</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response containing generated image(s)</returns>
     public abstract Task<CoreImageResponse> GenerateImageAsync(
         CoreImageRequest request,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Generates an image from a conversational context with fallback support
+    /// </summary>
+    /// <param name="request">Conversational request with message history</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response containing generated image(s)</returns>
     public virtual Task<CoreImageResponse> GenerateImageFromConversationAsync(
         CoreConversationalRequest request,
         CancellationToken cancellationToken = default)
@@ -58,6 +87,13 @@ public abstract class ImageProviderBase : IImageGenerationProvider
         throw new NotImplementedException($"Conversational image generation not implemented for {ProviderName}");
     }
 
+    /// <summary>
+    /// Edits an existing image based on a text prompt
+    /// </summary>
+    /// <param name="request">Image edit request with source image and instructions</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response containing edited image(s)</returns>
+    /// <exception cref="NotSupportedException">Thrown when provider doesn't support editing</exception>
     public virtual Task<CoreImageResponse> EditImageAsync(
         CoreImageEditRequest request,
         CancellationToken cancellationToken = default)
@@ -70,6 +106,13 @@ public abstract class ImageProviderBase : IImageGenerationProvider
         throw new NotImplementedException($"Image editing not implemented for {ProviderName}");
     }
 
+    /// <summary>
+    /// Creates variations of an existing image
+    /// </summary>
+    /// <param name="request">Image variation request with source image</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response containing variation image(s)</returns>
+    /// <exception cref="NotSupportedException">Thrown when provider doesn't support variations</exception>
     public virtual Task<CoreImageResponse> CreateVariationAsync(
         CoreImageVariationRequest request,
         CancellationToken cancellationToken = default)
@@ -82,6 +125,11 @@ public abstract class ImageProviderBase : IImageGenerationProvider
         throw new NotImplementedException($"Image variations not implemented for {ProviderName}");
     }
 
+    /// <summary>
+    /// Checks if this provider supports a specific operation
+    /// </summary>
+    /// <param name="operation">The operation to check</param>
+    /// <returns>True if the operation is supported, otherwise false</returns>
     public virtual bool SupportsOperation(ImageOperation operation)
     {
         return Capabilities.SupportedOperations.Contains(operation);

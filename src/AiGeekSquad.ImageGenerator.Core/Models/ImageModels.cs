@@ -68,10 +68,19 @@ public static class ImageModels
     /// </summary>
     public static class Sizes
     {
+        /// <summary>1024x1024 square format</summary>
         public const string Square1024 = "1024x1024";
+        
+        /// <summary>512x512 square format</summary>
         public const string Square512 = "512x512";
+        
+        /// <summary>256x256 square format</summary>
         public const string Square256 = "256x256";
+        
+        /// <summary>1792x1024 wide format</summary>
         public const string Wide1792x1024 = "1792x1024";
+        
+        /// <summary>1024x1792 tall format</summary>
         public const string Tall1024x1792 = "1024x1792";
     }
 
@@ -80,7 +89,10 @@ public static class ImageModels
     /// </summary>
     public static class Quality
     {
+        /// <summary>Standard quality</summary>
         public const string Standard = "standard";
+        
+        /// <summary>High definition quality</summary>
         public const string HD = "hd";
     }
 
@@ -89,7 +101,10 @@ public static class ImageModels
     /// </summary>
     public static class Style
     {
+        /// <summary>Vivid, hyper-real and dramatic images</summary>
         public const string Vivid = "vivid";
+        
+        /// <summary>Natural, less hyper-real looking images</summary>
         public const string Natural = "natural";
     }
 }
