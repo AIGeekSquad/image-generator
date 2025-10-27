@@ -417,3 +417,11 @@ FodyWeavers.xsd
 *.msm
 *.msp
 nupkg/
+
+# SonarQube
+.sonar/
+.sonarqube/
+
+# Test Results and Coverage
+TestResults/
+packages/
