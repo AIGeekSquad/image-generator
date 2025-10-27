@@ -6,6 +6,7 @@ using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGeneration
 using GeneratedImageModel = AiGeekSquad.ImageGenerator.Core.Models.GeneratedImage;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
+using AiGeekSquad.ImageGenerator.Core.Adapters;
 
 namespace AiGeekSquad.ImageGenerator.Core.Providers;
 
@@ -14,7 +15,7 @@ namespace AiGeekSquad.ImageGenerator.Core.Providers;
 /// </summary>
 public class GoogleImageProvider : ImageProviderBase
 {
-    private readonly PredictionServiceClient _client;
+    private readonly IGoogleImageAdapter _adapter;
     private readonly string _projectId;
     private readonly string _location;
 
@@ -22,12 +23,23 @@ public class GoogleImageProvider : ImageProviderBase
 
     protected override ProviderCapabilities Capabilities { get; }
 
+    /// <summary>
+    /// Creates a Google provider with the specified configuration
+    /// </summary>
     public GoogleImageProvider(string projectId, string location = "us-central1", string? defaultModel = null, HttpClient? httpClient = null)
+        : this(new GoogleImageAdapter(PredictionServiceClient.Create()), projectId, location, defaultModel, httpClient)
+    {
+    }
+
+    /// <summary>
+    /// Creates a Google provider with a custom adapter (useful for testing)
+    /// </summary>
+    public GoogleImageProvider(IGoogleImageAdapter adapter, string projectId, string location = "us-central1", string? defaultModel = null, HttpClient? httpClient = null)
         : base(httpClient)
     {
+        _adapter = adapter;
         _projectId = projectId;
         _location = location;
-        _client = PredictionServiceClient.Create();
 
         Capabilities = new ProviderCapabilities
         {
@@ -58,12 +70,26 @@ public class GoogleImageProvider : ImageProviderBase
         CancellationToken cancellationToken = default)
     {
         var model = GetModelOrDefault(request.Model);
-        
         var endpoint = $"projects/{_projectId}/locations/{_location}/publishers/google/models/{model}";
-
-        // Extract text prompt from messages
         var prompt = ExtractTextFromMessages(request.Messages);
 
+        var predictRequest = BuildPredictRequest(endpoint, prompt, request);
+        var response = await _adapter.PredictAsync(predictRequest, cancellationToken);
+
+        var images = ExtractImagesFromPrediction(response);
+        
+        return BuildResponse(
+            images,
+            model,
+            new Dictionary<string, object>
+            {
+                ["location"] = _location,
+                ["projectId"] = _projectId
+            });
+    }
+
+    private PredictRequest BuildPredictRequest(string endpoint, string prompt, CoreImageRequest request)
+    {
         var parameters = new Dictionary<string, object>
         {
             ["sampleCount"] = request.NumberOfImages
@@ -100,15 +126,16 @@ public class GoogleImageProvider : ImageProviderBase
         var parametersValue = Google.Protobuf.WellKnownTypes.Value.Parser.ParseJson(
             JsonSerializer.Serialize(parameters));
 
-        var predictRequest = new PredictRequest
+        return new PredictRequest
         {
             Endpoint = endpoint,
             Instances = { instancesValue },
             Parameters = parametersValue
         };
+    }
 
-        var response = await _client.PredictAsync(predictRequest, cancellationToken);
-
+    private static List<GeneratedImageModel> ExtractImagesFromPrediction(PredictResponse response)
+    {
         var images = new List<GeneratedImageModel>();
         
         foreach (var prediction in response.Predictions)
@@ -125,18 +152,7 @@ public class GoogleImageProvider : ImageProviderBase
             }
         }
 
-        return new CoreImageResponse
-        {
-            Images = images,
-            Model = model,
-            Provider = ProviderName,
-            CreatedAt = DateTime.UtcNow,
-            Metadata = new Dictionary<string, object>
-            {
-                ["location"] = _location,
-                ["projectId"] = _projectId
-            }
-        };
+        return images;
     }
 
     // Edit and Variation operations will use the base class implementation

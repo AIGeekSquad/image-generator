@@ -6,9 +6,9 @@ using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationR
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
 using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
-using GeneratedImageModel = AiGeekSquad.ImageGenerator.Core.Models.GeneratedImage;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
+using AiGeekSquad.ImageGenerator.Core.Adapters;
 
 namespace AiGeekSquad.ImageGenerator.Core.Providers;
 
@@ -17,28 +17,29 @@ namespace AiGeekSquad.ImageGenerator.Core.Providers;
 /// </summary>
 public class OpenAIImageProvider : ImageProviderBase
 {
-    private readonly OpenAIClient _client;
+    private readonly IOpenAIAdapter _adapter;
     private readonly string? _defaultDeployment;
 
     public override string ProviderName => "OpenAI";
 
     protected override ProviderCapabilities Capabilities { get; }
 
+    /// <summary>
+    /// Creates an OpenAI provider with the specified configuration
+    /// </summary>
     public OpenAIImageProvider(string apiKey, string? endpoint = null, string? defaultDeployment = null, HttpClient? httpClient = null)
+        : this(CreateAdapter(apiKey, endpoint), defaultDeployment, httpClient)
+    {
+    }
+
+    /// <summary>
+    /// Creates an OpenAI provider with a custom adapter (useful for testing)
+    /// </summary>
+    public OpenAIImageProvider(IOpenAIAdapter adapter, string? defaultDeployment = null, HttpClient? httpClient = null)
         : base(httpClient)
     {
+        _adapter = adapter;
         _defaultDeployment = defaultDeployment;
-        
-        if (!string.IsNullOrEmpty(endpoint))
-        {
-            // Azure OpenAI
-            _client = new AzureOpenAIClient(new Uri(endpoint), new System.ClientModel.ApiKeyCredential(apiKey));
-        }
-        else
-        {
-            // Standard OpenAI
-            _client = new OpenAIClient(apiKey);
-        }
 
         Capabilities = new ProviderCapabilities
         {
@@ -67,14 +68,29 @@ public class OpenAIImageProvider : ImageProviderBase
         };
     }
 
+    private static IOpenAIAdapter CreateAdapter(string apiKey, string? endpoint)
+    {
+        OpenAIClient client;
+        
+        if (!string.IsNullOrEmpty(endpoint))
+        {
+            // Azure OpenAI
+            client = new AzureOpenAIClient(new Uri(endpoint), new System.ClientModel.ApiKeyCredential(apiKey));
+        }
+        else
+        {
+            // Standard OpenAI
+            client = new OpenAIClient(apiKey);
+        }
+
+        return new OpenAIAdapter(client);
+    }
+
     public override async Task<CoreImageResponse> GenerateImageAsync(
         CoreImageRequest request,
         CancellationToken cancellationToken = default)
     {
         var model = GetModelOrDefault(request.Model);
-        var imageClient = _client.GetImageClient(model);
-
-        // Extract text prompt from messages
         var prompt = ExtractTextFromMessages(request.Messages);
 
         var options = new OpenAI.Images.ImageGenerationOptions
@@ -85,48 +101,26 @@ public class OpenAIImageProvider : ImageProviderBase
             ResponseFormat = GeneratedImageFormat.Uri
         };
 
-        var result = await imageClient.GenerateImageAsync(
-            prompt,
-            options,
-            cancellationToken);
+        var result = await _adapter.GenerateImageAsync(model, prompt, options, cancellationToken);
 
-        var images = new List<GeneratedImageModel>();
-        
-        if (result.Value != null)
-        {
-            images.Add(new GeneratedImageModel
-            {
-                Url = result.Value.ImageUri?.ToString(),
-                RevisedPrompt = result.Value.RevisedPrompt
-            });
-        }
-
-        return new CoreImageResponse
-        {
-            Images = images,
-            Model = model,
-            Provider = ProviderName,
-            CreatedAt = DateTime.UtcNow
-        };
+        return BuildSingleImageResponse(
+            result.ImageUri?.ToString(),
+            model,
+            result.RevisedPrompt);
     }
 
     public override async Task<CoreImageResponse> EditImageAsync(
         CoreImageEditRequest request,
         CancellationToken cancellationToken = default)
     {
-        // Use the requested model or fall back to DALL-E 2 for editing
         var model = request.Model ?? ImageModels.OpenAI.DallE2;
-        var imageClient = _client.GetImageClient(model);
-
-        // Extract text prompt from messages
         var prompt = ExtractTextFromMessages(request.Messages);
-
         var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
-        var imageName = "image.png";
 
-        var result = await imageClient.GenerateImageEditAsync(
+        var result = await _adapter.GenerateImageEditAsync(
+            model,
             imageStream,
-            imageName,
+            "image.png",
             prompt,
             new ImageEditOptions
             {
@@ -135,40 +129,23 @@ public class OpenAIImageProvider : ImageProviderBase
             },
             cancellationToken);
 
-        var images = new List<GeneratedImageModel>();
-        
-        if (result.Value != null)
-        {
-            images.Add(new GeneratedImageModel
-            {
-                Url = result.Value.ImageUri?.ToString(),
-                RevisedPrompt = result.Value.RevisedPrompt
-            });
-        }
-
-        return new CoreImageResponse
-        {
-            Images = images,
-            Model = model,
-            Provider = ProviderName,
-            CreatedAt = DateTime.UtcNow
-        };
+        return BuildSingleImageResponse(
+            result.ImageUri?.ToString(),
+            model,
+            result.RevisedPrompt);
     }
 
     public override async Task<CoreImageResponse> CreateVariationAsync(
         CoreImageVariationRequest request,
         CancellationToken cancellationToken = default)
     {
-        // Use the requested model or fall back to DALL-E 2 for variations
         var model = request.Model ?? ImageModels.OpenAI.DallE2;
-        var imageClient = _client.GetImageClient(model);
-
         var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
-        var imageName = "image.png";
 
-        var result = await imageClient.GenerateImageVariationAsync(
+        var result = await _adapter.GenerateImageVariationAsync(
+            model,
             imageStream,
-            imageName,
+            "image.png",
             new ImageVariationOptions
             {
                 Size = ParseSize(request.Size),
@@ -176,23 +153,7 @@ public class OpenAIImageProvider : ImageProviderBase
             },
             cancellationToken);
 
-        var images = new List<GeneratedImageModel>();
-        
-        if (result.Value != null)
-        {
-            images.Add(new GeneratedImageModel
-            {
-                Url = result.Value.ImageUri?.ToString()
-            });
-        }
-
-        return new CoreImageResponse
-        {
-            Images = images,
-            Model = model,
-            Provider = ProviderName,
-            CreatedAt = DateTime.UtcNow
-        };
+        return BuildSingleImageResponse(result.ImageUri?.ToString(), model);
     }
 
     private static GeneratedImageSize? ParseSize(string? size)

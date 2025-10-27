@@ -6,6 +6,7 @@ using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditReq
 using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
 using CoreConversationMessage = AiGeekSquad.ImageGenerator.Core.Models.ConversationMessage;
 using CoreConversationalRequest = AiGeekSquad.ImageGenerator.Core.Models.ConversationalImageGenerationRequest;
+using GeneratedImageModel = AiGeekSquad.ImageGenerator.Core.Models.GeneratedImage;
 
 namespace AiGeekSquad.ImageGenerator.Core.Providers;
 
@@ -227,5 +228,57 @@ public abstract class ImageProviderBase : IImageGenerationProvider
         }
 
         return chatMessages;
+    }
+
+    /// <summary>
+    /// Helper method to build a standard response with common metadata
+    /// </summary>
+    protected CoreImageResponse BuildResponse(
+        IEnumerable<GeneratedImageModel> images,
+        string model,
+        Dictionary<string, object>? additionalMetadata = null)
+    {
+        return new CoreImageResponse
+        {
+            Images = images.ToList(),
+            Model = model,
+            Provider = ProviderName,
+            CreatedAt = DateTime.UtcNow,
+            Metadata = additionalMetadata
+        };
+    }
+
+    /// <summary>
+    /// Helper method to create a single-image response from URL
+    /// </summary>
+    protected CoreImageResponse BuildSingleImageResponse(
+        string? url,
+        string model,
+        string? revisedPrompt = null,
+        Dictionary<string, object>? additionalMetadata = null)
+    {
+        var image = new GeneratedImageModel
+        {
+            Url = url,
+            RevisedPrompt = revisedPrompt
+        };
+
+        return BuildResponse(new[] { image }, model, additionalMetadata);
+    }
+
+    /// <summary>
+    /// Helper method to create a single-image response from base64 data
+    /// </summary>
+    protected CoreImageResponse BuildSingleImageResponseFromBase64(
+        string? base64Data,
+        string model,
+        Dictionary<string, object>? additionalMetadata = null)
+    {
+        var image = new GeneratedImageModel
+        {
+            Base64Data = base64Data
+        };
+
+        return BuildResponse(new[] { image }, model, additionalMetadata);
     }
 }
