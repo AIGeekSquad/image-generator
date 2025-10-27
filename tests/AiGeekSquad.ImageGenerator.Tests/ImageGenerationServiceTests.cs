@@ -29,12 +29,10 @@ public class ImageGenerationServiceTests
         var result = service.GetProviders();
 
         // Assert
-        using (new AssertionScope())
-        {
-            result.Should().HaveCount(2);
-            result.Should().Contain(p => p.ProviderName == "Provider1");
-            result.Should().Contain(p => p.ProviderName == "Provider2");
-        }
+        using var scope = new AssertionScope();
+        result.Should().HaveCount(2);
+        result.Should().Contain(p => p.ProviderName == "Provider1");
+        result.Should().Contain(p => p.ProviderName == "Provider2");
     }
 
     [Fact]
@@ -51,11 +49,9 @@ public class ImageGenerationServiceTests
         var result = service.GetProvider("TestProvider");
 
         // Assert
-        using (new AssertionScope())
-        {
-            result.Should().NotBeNull();
-            result!.ProviderName.Should().Be("TestProvider");
-        }
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result!.ProviderName.Should().Be("TestProvider");
     }
 
     [Fact]
@@ -101,12 +97,10 @@ public class ImageGenerationServiceTests
         var result = await service.GenerateImageAsync("TestProvider", request);
 
         // Assert
-        using (new AssertionScope())
-        {
-            result.Should().NotBeNull();
-            result.Provider.Should().Be("TestProvider");
-            provider.Verify(p => p.GenerateImageAsync(request, It.IsAny<CancellationToken>()), Times.Once);
-        }
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result.Provider.Should().Be("TestProvider");
+        provider.Verify(p => p.GenerateImageAsync(request, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

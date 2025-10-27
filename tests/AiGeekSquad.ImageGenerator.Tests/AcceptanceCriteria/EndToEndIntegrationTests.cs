@@ -12,25 +12,23 @@ namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
 
 /// <summary>
 /// End-to-End Integration Tests with actual API calls
-/// Tests are dynamically skipped when API keys are not available using xUnit v2.9
+/// Tests use xUnit v3 SkipUnless to conditionally skip when API keys are not available
 /// Note: These tests require actual API keys - set environment variables OPENAI_API_KEY or GOOGLE_PROJECT_ID
 /// </summary>
 public class EndToEndIntegrationTests
 {
-    private static string? OpenAIApiKey => Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-    private static string? GoogleProjectId => Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID");
+    public static bool HasOpenAIApiKey => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+    public static bool HasGoogleProjectId => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID"));
+    public static bool HasAnyProvider => HasOpenAIApiKey || HasGoogleProjectId;
+    
+    private static string OpenAIApiKey => Environment.GetEnvironmentVariable("OPENAI_API_KEY")!;
+    private static string GoogleProjectId => Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID")!;
     private static string GoogleLocation => Environment.GetEnvironmentVariable("GOOGLE_LOCATION") ?? "us-central1";
 
-    [Fact]
+    [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
     public async Task E2E_OpenAI_GenerateImage_WithDallE3()
     {
         // Arrange
-        if (string.IsNullOrEmpty(OpenAIApiKey))
-        {
-            // Write informative message and return early instead of throwing
-            // This is the xUnit v2 pattern for conditional tests
-            return; // Test passes but does nothing
-        }
 
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         var request = new CoreImageRequest
@@ -47,24 +45,18 @@ public class EndToEndIntegrationTests
         var response = await provider.GenerateImageAsync(request, CancellationToken.None);
 
         // Assert
-        using (new AssertionScope())
-        {
-            response.Should().NotBeNull();
-            response.Images.Should().NotBeEmpty();
-            response.Images[0].Url.Should().NotBeNullOrEmpty();
-            response.Model.Should().Be(ImageModels.OpenAI.DallE3);
-            response.Provider.Should().Be("OpenAI");
-        }
+        using var scope = new AssertionScope();
+        response.Should().NotBeNull();
+        response.Images.Should().NotBeEmpty();
+        response.Images[0].Url.Should().NotBeNullOrEmpty();
+        response.Model.Should().Be(ImageModels.OpenAI.DallE3);
+        response.Provider.Should().Be("OpenAI");
     }
 
-    [Fact]
+    [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
     public async Task E2E_OpenAI_GenerateImage_WithDallE2()
     {
         // Arrange
-        if (string.IsNullOrEmpty(OpenAIApiKey))
-        {
-            return; // Skip test
-        }
 
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         var request = new CoreImageRequest
@@ -81,22 +73,16 @@ public class EndToEndIntegrationTests
         var response = await provider.GenerateImageAsync(request, CancellationToken.None);
 
         // Assert
-        using (new AssertionScope())
-        {
-            response.Should().NotBeNull();
-            response.Images.Should().NotBeEmpty();
-            response.Images[0].Url.Should().NotBeNullOrEmpty();
-        }
+        using var scope = new AssertionScope();
+        response.Should().NotBeNull();
+        response.Images.Should().NotBeEmpty();
+        response.Images[0].Url.Should().NotBeNullOrEmpty();
     }
 
-    [Fact]
+    [Fact(Skip = "Requires GOOGLE_PROJECT_ID environment variable", SkipUnless = nameof(HasGoogleProjectId))]
     public async Task E2E_Google_GenerateImage_WithImagen3()
     {
         // Arrange
-        if (string.IsNullOrEmpty(GoogleProjectId))
-        {
-            return; // Skip test
-        }
 
         var provider = new GoogleImageProvider(GoogleProjectId, GoogleLocation);
         var request = new CoreImageRequest
@@ -113,26 +99,20 @@ public class EndToEndIntegrationTests
         var response = await provider.GenerateImageAsync(request, CancellationToken.None);
 
         // Assert
-        using (new AssertionScope())
-        {
-            response.Should().NotBeNull();
-            response.Images.Should().NotBeEmpty();
-            response.Images[0].Base64Data.Should().NotBeNullOrEmpty();
-            
-            // Verify base64 can be decoded
-            var imageBytes = Convert.FromBase64String(response.Images[0].Base64Data!);
-            imageBytes.Should().NotBeEmpty();
-        }
+        using var scope = new AssertionScope();
+        response.Should().NotBeNull();
+        response.Images.Should().NotBeEmpty();
+        response.Images[0].Base64Data.Should().NotBeNullOrEmpty();
+        
+        // Verify base64 can be decoded
+        var imageBytes = Convert.FromBase64String(response.Images[0].Base64Data!);
+        imageBytes.Should().NotBeEmpty();
     }
 
-    [Fact]
+    [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
     public async Task E2E_OpenAI_EditImage_WithDallE2()
     {
         // Arrange
-        if (string.IsNullOrEmpty(OpenAIApiKey))
-        {
-            return; // Skip test
-        }
 
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         
@@ -155,22 +135,16 @@ public class EndToEndIntegrationTests
         var response = await provider.EditImageAsync(editRequest, CancellationToken.None);
 
         // Assert
-        using (new AssertionScope())
-        {
-            response.Should().NotBeNull();
-            response.Images.Should().NotBeEmpty();
-            response.Images[0].Url.Should().NotBeNullOrEmpty();
-        }
+        using var scope = new AssertionScope();
+        response.Should().NotBeNull();
+        response.Images.Should().NotBeEmpty();
+        response.Images[0].Url.Should().NotBeNullOrEmpty();
     }
 
-    [Fact]
+    [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
     public async Task E2E_OpenAI_CreateVariation_WithDallE2()
     {
         // Arrange
-        if (string.IsNullOrEmpty(OpenAIApiKey))
-        {
-            return; // Skip test
-        }
 
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         
@@ -190,22 +164,16 @@ public class EndToEndIntegrationTests
         var response = await provider.CreateVariationAsync(variationRequest, CancellationToken.None);
 
         // Assert
-        using (new AssertionScope())
-        {
-            response.Should().NotBeNull();
-            response.Images.Should().HaveCount(2);
-            response.Images.Should().OnlyContain(img => !string.IsNullOrEmpty(img.Url));
-        }
+        using var scope = new AssertionScope();
+        response.Should().NotBeNull();
+        response.Images.Should().HaveCount(2);
+        response.Images.Should().OnlyContain(img => !string.IsNullOrEmpty(img.Url));
     }
 
-    [Fact]
+    [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
     public async Task E2E_GenerateImage_FromConversation_WithMultipleMessages()
     {
         // Arrange
-        if (string.IsNullOrEmpty(OpenAIApiKey))
-        {
-            return; // Skip test
-        }
 
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         var request = new CoreImageRequest
@@ -224,21 +192,15 @@ public class EndToEndIntegrationTests
         var response = await provider.GenerateImageAsync(request, CancellationToken.None);
 
         // Assert
-        using (new AssertionScope())
-        {
-            response.Should().NotBeNull();
-            response.Images.Should().NotBeEmpty();
-        }
+        using var scope = new AssertionScope();
+        response.Should().NotBeNull();
+        response.Images.Should().NotBeEmpty();
     }
 
-    [Fact]
+    [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
     public async Task E2E_GenerateImage_WithMultiModalInput()
     {
         // Arrange
-        if (string.IsNullOrEmpty(OpenAIApiKey))
-        {
-            return; // Skip test
-        }
 
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         
@@ -263,32 +225,23 @@ public class EndToEndIntegrationTests
         var response = await provider.GenerateImageAsync(request, CancellationToken.None);
 
         // Assert - Provider extracts text even if it doesn't support multi-modal
-        using (new AssertionScope())
-        {
-            response.Should().NotBeNull();
-            response.Images.Should().NotBeEmpty();
-        }
+        using var scope = new AssertionScope();
+        response.Should().NotBeNull();
+        response.Images.Should().NotBeEmpty();
     }
 
-    [Fact]
+    [Fact(Skip = "Requires OPENAI_API_KEY or GOOGLE_PROJECT_ID environment variable", SkipUnless = nameof(HasAnyProvider))]
     public async Task E2E_MultipleProviders_SameRequest()
     {
         // Arrange
-        var hasOpenAI = !string.IsNullOrEmpty(OpenAIApiKey);
-        var hasGoogle = !string.IsNullOrEmpty(GoogleProjectId);
-        
-        if (!hasOpenAI && !hasGoogle)
-        {
-            return; // Skip test
-        }
 
         var prompt = "A beautiful sunset over the ocean";
         var results = new List<CoreImageResponse>();
 
         // Act - Test with available providers
-        if (hasOpenAI)
+        if (HasOpenAIApiKey)
         {
-            var openAiProvider = new OpenAIImageProvider(OpenAIApiKey!);
+            var openAiProvider = new OpenAIImageProvider(OpenAIApiKey);
             var openAiRequest = new CoreImageRequest
             {
                 Messages = new List<ChatMessage> { new(ChatRole.User, prompt) },
@@ -297,9 +250,9 @@ public class EndToEndIntegrationTests
             results.Add(await openAiProvider.GenerateImageAsync(openAiRequest, CancellationToken.None));
         }
 
-        if (hasGoogle)
+        if (HasGoogleProjectId)
         {
-            var googleProvider = new GoogleImageProvider(GoogleProjectId!, GoogleLocation);
+            var googleProvider = new GoogleImageProvider(GoogleProjectId, GoogleLocation);
             var googleRequest = new CoreImageRequest
             {
                 Messages = new List<ChatMessage> { new(ChatRole.User, prompt) },
@@ -309,11 +262,9 @@ public class EndToEndIntegrationTests
         }
 
         // Assert - All providers should successfully generate images
-        using (new AssertionScope())
-        {
-            results.Should().NotBeEmpty();
-            results.Should().OnlyContain(r => r.Images.Count > 0);
-        }
+        using var scope = new AssertionScope();
+        results.Should().NotBeEmpty();
+        results.Should().OnlyContain(r => r.Images.Count > 0);
     }
 
     /// <summary>

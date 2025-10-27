@@ -19,6 +19,7 @@ public class MultiProviderSupportTests
     public void AC1_OpenAI_ModelsAreDefined()
     {
         // Acceptance Criteria: Tool should support OpenAI DALL-E 2, DALL-E 3, GPT Image 1, and future models
+        using var scope = new AssertionScope();
         ImageModels.OpenAI.DallE2.Should().NotBeEmpty();
         ImageModels.OpenAI.DallE3.Should().NotBeEmpty();
         ImageModels.OpenAI.GPTImage1.Should().NotBeEmpty();
@@ -29,6 +30,7 @@ public class MultiProviderSupportTests
     public void AC2_Google_ModelsAreDefined()
     {
         // Acceptance Criteria: Tool should support Google Imagen models
+        using var scope = new AssertionScope();
         ImageModels.Google.Imagen2.Should().NotBeEmpty();
         ImageModels.Google.Imagen3.Should().NotBeEmpty();
         ImageModels.Google.ImagenFast.Should().NotBeEmpty();
@@ -49,6 +51,7 @@ public class MultiProviderSupportTests
             }
         };
 
+        using var scope = new AssertionScope();
         request.AdditionalParameters.Should().NotBeNull();
         request.AdditionalParameters.Count.Should().Be(2);
         request.AdditionalParameters["customParam1"].Should().Be("value1");
@@ -66,6 +69,7 @@ public class MultiProviderSupportTests
             Style = ImageModels.Style.Vivid
         };
 
+        using var scope = new AssertionScope();
         request.Quality.Should().Be(ImageModels.Quality.HD);
         request.Style.Should().Be(ImageModels.Style.Vivid);
     }
@@ -120,9 +124,10 @@ public class MultiProviderSupportTests
             CreatedAt = DateTime.UtcNow
         };
 
+        using var scope = new AssertionScope();
         response.Model.Should().Be("dall-e-3");
         response.Provider.Should().Be("OpenAI");
-        Assert.NotEqual(default, response.CreatedAt);
+        response.CreatedAt.Should().NotBe(default);
     }
 
     [Fact]
@@ -139,6 +144,7 @@ public class MultiProviderSupportTests
             Base64Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQ="
         };
 
+        using var scope = new AssertionScope();
         imageWithUrl.Url.Should().NotBeNull();
         imageWithUrl.Base64Data.Should().BeNull();
         imageWithBase64.Base64Data.Should().NotBeNull();
