@@ -262,7 +262,7 @@ The project automatically:
 
 ### SonarQube Integration
 
-Code quality and security are continuously monitored using [SonarQube Cloud](https://sonarcloud.io/project/overview?id=AIGeekSquad_image-generator).
+Code quality and security are continuously monitored using [SonarCloud](https://sonarcloud.io/project/overview?id=AIGeekSquad_image-generator).
 
 To set up SonarQube integration:
 1. Create a project on [SonarCloud.io](https://sonarcloud.io)
