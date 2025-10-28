@@ -41,9 +41,9 @@ builder.Services.AddSingleton<IImageGenerationProvider>(sp => /* factory */);
 
 ## Testing Framework Versions
 
-**Uses Preview/Alpha Packages:**
-- `xunit.v3` version `1.0.0` (v3, not stable v2)
-- `FluentAssertions` version `7.0.0-alpha.4` (alpha version)
+**Testing Framework Versions:**
+- `xunit.v3` version `3.1.0`
+- `FluentAssertions` version `7.2.0`
 
 **FluentAssertions AssertionScope Pattern:**
 - **Use AssertionScope ONLY for multiple assertions (3+ recommended)** - groups related assertions and reports all failures together
