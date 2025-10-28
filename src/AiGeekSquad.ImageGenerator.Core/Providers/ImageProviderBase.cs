@@ -344,26 +344,26 @@ public abstract class ImageProviderBase : IImageGenerationProvider
             
             if (!response.IsSuccessStatusCode)
             {
-                System.Diagnostics.Debug.WriteLine($"HTTP {(int)response.StatusCode} {response.StatusCode} downloading image from {url}");
+                // Silently fail for now - preserve URLs when download fails
                 return null;
             }
 
             var imageBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
             return Convert.ToBase64String(imageBytes);
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
-            System.Diagnostics.Debug.WriteLine($"HTTP request failed downloading image from {url}: {ex.Message}");
+            // Silently fail - preserve URL when download fails
             return null;
         }
-        catch (TaskCanceledException ex)
+        catch (TaskCanceledException)
         {
-            System.Diagnostics.Debug.WriteLine($"Download timeout for image from {url}: {ex.Message}");
+            // Silently fail - download timeout
             return null;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            System.Diagnostics.Debug.WriteLine($"Unexpected error downloading image from {url}: {ex.GetType().Name}: {ex.Message}");
+            // Silently fail - unexpected error
             return null;
         }
     }

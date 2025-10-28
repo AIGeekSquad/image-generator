@@ -137,14 +137,41 @@ public class OpenAIImageProvider : ImageProviderBase
             options.Style = style.Value;
         }
 
+        // TODO: Add support for multiple images with DALL-E 2
+        // Currently OpenAI SDK GenerateImageAsync only returns single image
+
         var result = await _adapter.GenerateImageAsync(model, prompt, options, cancellationToken);
 
-        return await BuildSingleImageResponseFromUrlAsync(
-            result.ImageUri?.ToString(),
-            model,
-            result.RevisedPrompt,
-            null,
-            cancellationToken);
+        // Check model type first - GPT Image models return Base64, DALL-E models return URLs
+        if (model.StartsWith("gpt-image", StringComparison.OrdinalIgnoreCase) && result.ImageBytes != null)
+        {
+            // GPT Image models - use Base64 data directly
+            var base64Data = Convert.ToBase64String(result.ImageBytes.ToArray());
+            return new CoreImageResponse
+            {
+                Images = new List<Models.GeneratedImage>
+                {
+                    new()
+                    {
+                        Base64Data = base64Data,
+                        Url = null,
+                        RevisedPrompt = result.RevisedPrompt
+                    }
+                },
+                Model = model,
+                Provider = "OpenAI"
+            };
+        }
+        else
+        {
+            // DALL-E models or fallback - download from URL
+            return await BuildSingleImageResponseFromUrlAsync(
+                result.ImageUri?.ToString(),
+                model,
+                result.RevisedPrompt,
+                null,
+                cancellationToken);
+        }
     }
 
     /// <summary>
@@ -183,12 +210,36 @@ public class OpenAIImageProvider : ImageProviderBase
             options,
             cancellationToken);
 
-        return await BuildSingleImageResponseFromUrlAsync(
-            result.ImageUri?.ToString(),
-            model,
-            result.RevisedPrompt,
-            null,
-            cancellationToken);
+        // Check model type first - GPT Image models return Base64, DALL-E models return URLs
+        if (model.StartsWith("gpt-image", StringComparison.OrdinalIgnoreCase) && result.ImageBytes != null)
+        {
+            // GPT Image models - use Base64 data directly
+            var base64Data = Convert.ToBase64String(result.ImageBytes.ToArray());
+            return new CoreImageResponse
+            {
+                Images = new List<Models.GeneratedImage>
+                {
+                    new()
+                    {
+                        Base64Data = base64Data,
+                        Url = null,
+                        RevisedPrompt = result.RevisedPrompt
+                    }
+                },
+                Model = model,
+                Provider = "OpenAI"
+            };
+        }
+        else
+        {
+            // DALL-E models or fallback - download from URL
+            return await BuildSingleImageResponseFromUrlAsync(
+                result.ImageUri?.ToString(),
+                model,
+                result.RevisedPrompt,
+                null,
+                cancellationToken);
+        }
     }
 
     /// <summary>

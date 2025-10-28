@@ -64,7 +64,7 @@ public class EndToEndIntegrationTests
         {
             Messages = new List<ChatMessage>
             {
-                new(ChatRole.User, "A cute cat playing with a ball of yarn")
+                new(ChatRole.User, "cat")
             },
             Model = ImageModels.OpenAI.GPTImage1Mini,
             Size = "1024x1024"
@@ -127,7 +127,7 @@ public class EndToEndIntegrationTests
         {
             Messages = new List<ChatMessage>
             {
-                new(ChatRole.User, "Add a red circle in the center")
+                new(ChatRole.User, "edit image")
             },
             Image = testImageBase64,
             Model = ImageModels.OpenAI.GPTImage1Mini,
