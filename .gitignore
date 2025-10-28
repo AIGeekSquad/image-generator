@@ -133,11 +133,6 @@ ipch/
 *.vspx
 *.sap
 
-# Visual Studio Trace Files
-*.e2e
-# Allow E2E test directories
-!tests/**/E2E/
-
 # TFS 2012 Local Workspace
 $tf/
 
