@@ -35,9 +35,9 @@ public class OpenAIImageProvider : ImageProviderBase
     /// <param name="apiKey">OpenAI API key</param>
     /// <param name="endpoint">Optional Azure OpenAI endpoint URL</param>
     /// <param name="defaultDeployment">Optional default model deployment name</param>
-    /// <param name="httpClient">Optional HTTP client for downloading images</param>
+    /// <param name="httpClient">HTTP client for downloading images</param>
     public OpenAIImageProvider(string apiKey, string? endpoint = null, string? defaultDeployment = null, HttpClient? httpClient = null)
-        : this(CreateAdapter(apiKey, endpoint), defaultDeployment, httpClient)
+        : this(CreateAdapter(apiKey, endpoint), defaultDeployment, httpClient ?? new HttpClient())
     {
     }
 
@@ -46,9 +46,9 @@ public class OpenAIImageProvider : ImageProviderBase
     /// </summary>
     /// <param name="adapter">Custom OpenAI adapter implementation</param>
     /// <param name="defaultDeployment">Optional default model deployment name</param>
-    /// <param name="httpClient">Optional HTTP client for downloading images</param>
+    /// <param name="httpClient">HTTP client for downloading images</param>
     public OpenAIImageProvider(IOpenAIAdapter adapter, string? defaultDeployment = null, HttpClient? httpClient = null)
-        : base(httpClient)
+        : base(httpClient ?? new HttpClient())
     {
         _adapter = adapter;
         _defaultDeployment = defaultDeployment;
@@ -139,10 +139,12 @@ public class OpenAIImageProvider : ImageProviderBase
 
         var result = await _adapter.GenerateImageAsync(model, prompt, options, cancellationToken);
 
-        return BuildSingleImageResponse(
+        return await BuildSingleImageResponseFromUrlAsync(
             result.ImageUri?.ToString(),
             model,
-            result.RevisedPrompt);
+            result.RevisedPrompt,
+            null,
+            cancellationToken);
     }
 
     /// <summary>
@@ -181,10 +183,12 @@ public class OpenAIImageProvider : ImageProviderBase
             options,
             cancellationToken);
 
-        return BuildSingleImageResponse(
+        return await BuildSingleImageResponseFromUrlAsync(
             result.ImageUri?.ToString(),
             model,
-            result.RevisedPrompt);
+            result.RevisedPrompt,
+            null,
+            cancellationToken);
     }
 
     /// <summary>
@@ -221,7 +225,7 @@ public class OpenAIImageProvider : ImageProviderBase
             options,
             cancellationToken);
 
-        return BuildSingleImageResponse(result.ImageUri?.ToString(), model);
+        return await BuildSingleImageResponseFromUrlAsync(result.ImageUri?.ToString(), model, null, null, cancellationToken);
     }
 
     private static GeneratedImageSize? ParseSize(string? size)

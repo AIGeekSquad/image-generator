@@ -1,14 +1,14 @@
+using AiGeekSquad.ImageGenerator.Core.Models;
+using AiGeekSquad.ImageGenerator.Core.Providers;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.Extensions.AI;
+using SixLabors.ImageSharp;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
-using FluentAssertions;
-using FluentAssertions.Execution;
-using AiGeekSquad.ImageGenerator.Core.Providers;
-using AiGeekSquad.ImageGenerator.Core.Models;
-using SixLabors.ImageSharp;
 
-namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.AcceptanceCriteria;
 
 /// <summary>
 /// End-to-End Integration Tests with actual API calls

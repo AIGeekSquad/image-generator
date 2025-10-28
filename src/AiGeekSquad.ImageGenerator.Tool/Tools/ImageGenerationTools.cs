@@ -16,7 +16,7 @@ namespace AiGeekSquad.ImageGenerator.Tool.Tools;
 /// MCP tools for image generation.
 /// These tools can be invoked by MCP clients to perform image generation operations.
 /// </summary>
-internal class ImageGenerationTools(
+public class ImageGenerationTools(
     IImageGenerationService imageService,
     ILogger<ImageGenerationTools> logger)
 {

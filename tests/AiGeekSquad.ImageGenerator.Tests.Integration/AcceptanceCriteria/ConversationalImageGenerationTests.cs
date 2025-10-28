@@ -1,12 +1,12 @@
-using Microsoft.Extensions.AI;
-using FluentAssertions;
-using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
-using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
+using FluentAssertions;
+using Microsoft.Extensions.AI;
 using Moq;
+using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
+using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 
-namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.AcceptanceCriteria;
 
 /// <summary>
 /// Acceptance Criteria Tests: Verify that the tool supports multi-modal conversational image generation

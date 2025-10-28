@@ -4,6 +4,8 @@
     <Project Path="src/AiGeekSquad.ImageGenerator.Tool/AiGeekSquad.ImageGenerator.Tool.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/AiGeekSquad.ImageGenerator.Tests/AiGeekSquad.ImageGenerator.Tests.csproj" />
+    <Project Path="tests/AiGeekSquad.ImageGenerator.Tests.E2E/AiGeekSquad.ImageGenerator.Tests.E2E.csproj" />
+    <Project Path="tests/AiGeekSquad.ImageGenerator.Tests.Integration/AiGeekSquad.ImageGenerator.Tests.Integration.csproj" />
+    <Project Path="tests/AiGeekSquad.ImageGenerator.Tests.Unit/AiGeekSquad.ImageGenerator.Tests.Unit.csproj" />
   </Folder>
 </Solution>

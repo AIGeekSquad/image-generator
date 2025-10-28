@@ -1,8 +1,8 @@
-using Microsoft.Extensions.AI;
-using FluentAssertions;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Services;
+using FluentAssertions;
+using Microsoft.Extensions.AI;
 using Moq;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
@@ -10,7 +10,7 @@ using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditReq
 using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
 using CoreConversationalRequest = AiGeekSquad.ImageGenerator.Core.Models.ConversationalImageGenerationRequest;
 
-namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.AcceptanceCriteria;
 
 /// <summary>
 /// Acceptance Criteria Tests: Verify extensibility and custom provider loading

@@ -1,11 +1,11 @@
-using Microsoft.Extensions.AI;
+using AiGeekSquad.ImageGenerator.Core.Models;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.Extensions.AI;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
-using AiGeekSquad.ImageGenerator.Core.Models;
 
-namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.AcceptanceCriteria;
 
 /// <summary>
 /// Acceptance Criteria Tests: Verify support for multiple AI providers and models

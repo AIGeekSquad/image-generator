@@ -6,8 +6,6 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
-    <RootNamespace>AiGeekSquad.ImageGenerator.Tests</RootNamespace>
-    <AssemblyName>AiGeekSquad.ImageGenerator.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

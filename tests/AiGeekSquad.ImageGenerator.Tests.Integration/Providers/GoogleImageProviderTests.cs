@@ -1,12 +1,12 @@
-using AiGeekSquad.ImageGenerator.Core.Providers;
-using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
+using AiGeekSquad.ImageGenerator.Core.Models;
+using AiGeekSquad.ImageGenerator.Core.Providers;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.AI;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 
-namespace AiGeekSquad.ImageGenerator.Tests.Providers;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.Providers;
 
 /// <summary>
 /// Tests for GoogleImageProvider to verify provider functionality and increase code coverage

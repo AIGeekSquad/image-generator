@@ -2,7 +2,7 @@ using AiGeekSquad.ImageGenerator.Core.Models;
 using FluentAssertions;
 using FluentAssertions.Execution;
 
-namespace AiGeekSquad.ImageGenerator.Tests;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration;
 
 public class ImageModelsTests
 {

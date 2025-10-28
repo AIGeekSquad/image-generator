@@ -1,14 +1,14 @@
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Services;
-using Microsoft.Extensions.AI;
-using Moq;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.Extensions.AI;
+using Moq;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 
-namespace AiGeekSquad.ImageGenerator.Tests;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration;
 
 public class ImageGenerationServiceTests
 {

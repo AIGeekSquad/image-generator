@@ -1,10 +1,10 @@
-using Microsoft.Extensions.AI;
-using FluentAssertions;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
+using FluentAssertions;
+using Microsoft.Extensions.AI;
 using Moq;
 
-namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.AcceptanceCriteria;
 
 /// <summary>
 /// Acceptance Criteria Tests: Verify image editing and variation capabilities
