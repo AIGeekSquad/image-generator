@@ -146,56 +146,81 @@ public class McpArgumentParser : IArgumentParser
     {
         var result = new ValidationResult();
 
-        // Validate prompt requirement (for non-conversation requests)
-        if (string.IsNullOrWhiteSpace(args.Prompt) && 
+        ValidatePromptRequirement(args, result);
+        ValidateNumberOfImages(args, result);
+        ValidateSizeFormat(args, result);
+        ValidateQualityValues(args, result);
+        ValidateStyleValues(args, result);
+        ValidateConversationFormat(args, result);
+        ValidateImageFormat(args, result);
+
+        return result;
+    }
+
+    private static void ValidatePromptRequirement(ParsedArguments args, ValidationResult result)
+    {
+        if (string.IsNullOrWhiteSpace(args.Prompt) &&
             (args.Conversation == null || args.Conversation.Count == 0))
         {
             result.Errors.Add("Either 'prompt' or valid 'conversationJson' is required");
         }
+    }
 
-        // Validate number of images
+    private static void ValidateNumberOfImages(ParsedArguments args, ValidationResult result)
+    {
         if (args.NumberOfImages < 1 || args.NumberOfImages > 10)
         {
             result.Errors.Add("NumberOfImages must be between 1 and 10");
         }
+    }
 
-        // Validate size format
+    private static void ValidateSizeFormat(ParsedArguments args, ValidationResult result)
+    {
         if (!string.IsNullOrEmpty(args.Size) && args.ParsedSize == null)
         {
             result.Errors.Add($"Invalid size format: '{args.Size}'. Expected format: 'WIDTHxHEIGHT' (e.g., '1024x1024')");
         }
+    }
 
-        // Validate quality values
-        if (!string.IsNullOrEmpty(args.Quality) && 
-            args.Quality != "standard" && args.Quality != "hd")
+    private static void ValidateQualityValues(ParsedArguments args, ValidationResult result)
+    {
+        if (!string.IsNullOrEmpty(args.Quality) &&
+            !IsValidQuality(args.Quality))
         {
             result.Errors.Add("Quality must be either 'standard' or 'hd'");
         }
+    }
 
-        // Validate style values
-        if (!string.IsNullOrEmpty(args.Style) && 
-            args.Style != "vivid" && args.Style != "natural")
+    private static void ValidateStyleValues(ParsedArguments args, ValidationResult result)
+    {
+        if (!string.IsNullOrEmpty(args.Style) &&
+            !IsValidStyle(args.Style))
         {
             result.Errors.Add("Style must be either 'vivid' or 'natural'");
         }
+    }
 
-        // Validate conversation format
+    private static void ValidateConversationFormat(ParsedArguments args, ValidationResult result)
+    {
         if (args.Conversation != null && args.Conversation.Count == 0)
         {
             result.Errors.Add("Conversation must contain at least one message");
         }
-
-        // Validate image format (for edit/variation operations)
-        if (!string.IsNullOrEmpty(args.Image))
-        {
-            if (!IsValidImageFormat(args.Image))
-            {
-                result.Errors.Add("Image must be a valid base64 encoded image, data URL, or HTTP URL");
-            }
-        }
-
-        return result;
     }
+
+    private static void ValidateImageFormat(ParsedArguments args, ValidationResult result)
+    {
+        if (!string.IsNullOrEmpty(args.Image) && !IsValidImageFormat(args.Image))
+        {
+            result.Errors.Add("Image must be a valid base64 encoded image, data URL, or HTTP URL");
+        }
+    }
+
+    private static bool IsValidQuality(string quality) =>
+        quality == "standard" || quality == "hd";
+
+    private static bool IsValidStyle(string style) =>
+        style == "vivid" || style == "natural";
 
     /// <summary>
     /// Parses a size string like "1024x1024" into structured format
@@ -207,7 +232,7 @@ public class McpArgumentParser : IArgumentParser
         if (string.IsNullOrWhiteSpace(sizeString))
             return null;
 
-        var parts = sizeString.Split('x', 'X');
+        var parts = sizeString.Split(new[] { 'x', 'X' }, StringSplitOptions.None);
         if (parts.Length != 2)
             return null;
 

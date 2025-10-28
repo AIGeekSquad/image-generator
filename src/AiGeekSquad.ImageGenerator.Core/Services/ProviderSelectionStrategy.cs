@@ -100,7 +100,7 @@ public class SmartProviderSelector : IProviderSelectionStrategy
                 $". Available providers: {string.Join(", ", availableProviders)}");
         }
 
-        var selected = options.First();
+        var selected = options[0];
         _logger.LogInformation("Selected provider '{Provider}' for operation '{Operation}'", 
             selected.ProviderName, context.Operation);
         
@@ -263,8 +263,8 @@ public class FallbackProviderSelector : IProviderSelectionStrategy
             }
             catch (InvalidOperationException ex) when (attempts < maxAttempts - 1)
             {
-                _logger.LogWarning("Provider selection failed on attempt {Attempt}: {Message}", 
-                    attempts + 1, ex.Message);
+                _logger.LogWarning(ex, "Provider selection failed on attempt {Attempt}",
+                    attempts + 1);
                 
                 // Add all currently known providers to failed list to force different selection
                 var availableProviders = await _primarySelector.GetProviderOptionsAsync(context, services);

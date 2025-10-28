@@ -17,7 +17,6 @@ namespace AiGeekSquad.ImageGenerator.Core.Providers;
 public class OpenAIImageProvider : ImageProviderBase
 {
     private readonly IOpenAIAdapter _adapter;
-    private readonly string? _defaultDeployment;
 
     /// <summary>
     /// Gets the provider name
@@ -51,7 +50,7 @@ public class OpenAIImageProvider : ImageProviderBase
         : base(httpClient ?? new HttpClient())
     {
         _adapter = adapter;
-        _defaultDeployment = defaultDeployment;
+        var defaultModel = defaultDeployment ?? ImageModels.OpenAI.DallE3;
 
         Capabilities = new ProviderCapabilities
         {
@@ -68,7 +67,7 @@ public class OpenAIImageProvider : ImageProviderBase
                 ImageOperation.Edit,
                 ImageOperation.Variation
             },
-            DefaultModel = _defaultDeployment ?? ImageModels.OpenAI.DallE3,
+            DefaultModel = defaultModel,
             AcceptsCustomModels = true,
             Features = new Dictionary<string, object>
             {
@@ -137,8 +136,8 @@ public class OpenAIImageProvider : ImageProviderBase
             options.Style = style.Value;
         }
 
-        // TODO: Add support for multiple images with DALL-E 2
-        // Currently OpenAI SDK GenerateImageAsync only returns single image
+        // Note: Multiple image generation with DALL-E 2 is currently limited by OpenAI SDK
+        // The SDK's GenerateImageAsync method only returns a single image at this time
 
         var result = await _adapter.GenerateImageAsync(model, prompt, options, cancellationToken);
 
