@@ -90,14 +90,7 @@ public class SmartProviderSelector : IProviderSelectionStrategy
         
         if (!options.Any())
         {
-            var availableProviders = _registry.GetAvailableFactories(services)
-                .Select(f => f.Name)
-                .ToList();
-                
-            throw new InvalidOperationException(
-                $"No suitable providers found for operation '{context.Operation}'" +
-                (context.Model != null ? $" with model '{context.Model}'" : "") +
-                $". Available providers: {string.Join(", ", availableProviders)}");
+            ThrowNoSuitableProvidersException(context, services);
         }
 
         var selected = options[0];
@@ -105,6 +98,21 @@ public class SmartProviderSelector : IProviderSelectionStrategy
             selected.ProviderName, context.Operation);
         
         return selected;
+    }
+    
+    private void ThrowNoSuitableProvidersException(
+        ProviderSelectionContext context,
+        IServiceProvider services)
+    {
+        var availableProviders = _registry.GetAvailableFactories(services)
+            .Select(f => f.Name)
+            .ToList();
+        
+        var modelInfo = context.Model != null ? $" with model '{context.Model}'" : "";
+        var message = $"No suitable providers found for operation '{context.Operation}'{modelInfo}" +
+                     $". Available providers: {string.Join(", ", availableProviders)}";
+        
+        throw new InvalidOperationException(message);
     }
 
     /// <summary>
@@ -114,51 +122,90 @@ public class SmartProviderSelector : IProviderSelectionStrategy
         ProviderSelectionContext context, 
         IServiceProvider services)
     {
-        var candidates = new List<(IProviderFactory Factory, int Score)>();
-
-        // Get all available factories
         var availableFactories = _registry.GetAvailableFactories(services).ToList();
+        var candidates = await ScoreFactoriesAsync(availableFactories, context);
+        var sortedFactories = SortFactoriesByScore(candidates);
         
-        foreach (var factory in availableFactories)
+        return CreateProviderInstances(sortedFactories, services);
+    }
+    
+    private async Task<List<(IProviderFactory Factory, int Score)>> ScoreFactoriesAsync(
+        List<IProviderFactory> factories,
+        ProviderSelectionContext context)
+    {
+        var candidates = new List<(IProviderFactory Factory, int Score)>();
+        
+        foreach (var factory in factories)
         {
-            // Skip failed providers
-            if (context.FailedProviders.Contains(factory.Name))
+            if (ShouldSkipFactory(factory, context))
             {
-                _logger.LogDebug("Skipping previously failed provider: {Provider}", factory.Name);
                 continue;
             }
-
+            
             var score = await ScoreProviderAsync(factory, context);
             if (score > 0)
             {
                 candidates.Add((factory, score));
             }
         }
-
-        // Sort by score (highest first), then by priority
-        var sortedFactories = candidates
+        
+        return candidates;
+    }
+    
+    private bool ShouldSkipFactory(IProviderFactory factory, ProviderSelectionContext context)
+    {
+        if (context.FailedProviders.Contains(factory.Name))
+        {
+            _logger.LogDebug("Skipping previously failed provider: {Provider}", factory.Name);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    private static List<IProviderFactory> SortFactoriesByScore(
+        List<(IProviderFactory Factory, int Score)> candidates)
+    {
+        return candidates
             .OrderByDescending(c => c.Score)
             .ThenByDescending(c => c.Factory.GetMetadata().Priority)
             .Select(c => c.Factory)
             .ToList();
-
-        // Create provider instances
+    }
+    
+    private List<IImageGenerationProvider> CreateProviderInstances(
+        List<IProviderFactory> factories,
+        IServiceProvider services)
+    {
         var providers = new List<IImageGenerationProvider>();
-        foreach (var factory in sortedFactories)
+        
+        foreach (var factory in factories)
         {
-            try
+            var provider = TryCreateProvider(factory, services);
+            if (provider != null)
             {
-                var provider = factory.Create(services);
                 providers.Add(provider);
-                _logger.LogDebug("Added provider option: {Provider}", provider.ProviderName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to create provider from factory: {Factory}", factory.Name);
             }
         }
-
+        
         return providers;
+    }
+    
+    private IImageGenerationProvider? TryCreateProvider(
+        IProviderFactory factory,
+        IServiceProvider services)
+    {
+        try
+        {
+            var provider = factory.Create(services);
+            _logger.LogDebug("Added provider option: {Provider}", provider.ProviderName);
+            return provider;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create provider from factory: {Factory}", factory.Name);
+            return null;
+        }
     }
 
     /// <summary>
@@ -170,45 +217,20 @@ public class SmartProviderSelector : IProviderSelectionStrategy
         {
             var metadata = factory.GetMetadata();
             var capabilities = metadata.Capabilities;
-            int score = 0;
-
-            // Explicit provider match (highest priority)
-            if (!string.IsNullOrEmpty(context.PreferredProvider) &&
-                factory.Name.Equals(context.PreferredProvider, StringComparison.OrdinalIgnoreCase))
+            
+            if (!SupportsOperation(capabilities, context.Operation))
             {
-                score += 1000;
+                return Task.FromResult(0);
             }
-
-            // Operation support (required)
-            if (!capabilities.SupportedOperations.Contains(context.Operation))
+            
+            var modelScore = CalculateModelScore(capabilities, context.Model);
+            if (modelScore < 0)
             {
-                return Task.FromResult(0); // Cannot handle the operation
+                return Task.FromResult(0);
             }
-            score += 100;
-
-            // Model support
-            if (!string.IsNullOrEmpty(context.Model))
-            {
-                var hasExplicitModel = capabilities.ExampleModels.Any(m =>
-                    m.Equals(context.Model, StringComparison.OrdinalIgnoreCase));
-                
-                if (hasExplicitModel)
-                {
-                    score += 50; // Explicit model support
-                }
-                else if (capabilities.AcceptsCustomModels)
-                {
-                    score += 25; // Can try custom model
-                }
-                else
-                {
-                    return Task.FromResult(0); // Cannot handle the model
-                }
-            }
-
-            // Base priority from metadata
-            score += metadata.Priority;
-
+            
+            var score = CalculateTotalScore(factory, context, metadata, modelScore);
+            
             _logger.LogDebug("Provider {Provider} scored {Score} for context", factory.Name, score);
             return Task.FromResult(score);
         }
@@ -217,6 +239,60 @@ public class SmartProviderSelector : IProviderSelectionStrategy
             _logger.LogWarning(ex, "Error scoring provider factory: {Factory}", factory.Name);
             return Task.FromResult(0);
         }
+    }
+    
+    private static bool SupportsOperation(ProviderCapabilities capabilities, ImageOperation operation)
+    {
+        return capabilities.SupportedOperations.Contains(operation);
+    }
+    
+    private static int CalculateModelScore(ProviderCapabilities capabilities, string? model)
+    {
+        if (string.IsNullOrEmpty(model))
+        {
+            return 0;
+        }
+        
+        var hasExplicitModel = capabilities.ExampleModels.Any(m =>
+            m.Equals(model, StringComparison.OrdinalIgnoreCase));
+        
+        if (hasExplicitModel)
+        {
+            return 50; // Explicit model support
+        }
+        
+        if (capabilities.AcceptsCustomModels)
+        {
+            return 25; // Can try custom model
+        }
+        
+        return -1; // Cannot handle the model
+    }
+    
+    private static int CalculateTotalScore(
+        IProviderFactory factory, 
+        ProviderSelectionContext context, 
+        ProviderMetadata metadata,
+        int modelScore)
+    {
+        var score = 100; // Base score for operation support
+        
+        // Explicit provider match (highest priority)
+        if (IsPreferredProvider(factory.Name, context.PreferredProvider))
+        {
+            score += 1000;
+        }
+        
+        score += modelScore;
+        score += metadata.Priority;
+        
+        return score;
+    }
+    
+    private static bool IsPreferredProvider(string factoryName, string? preferredProvider)
+    {
+        return !string.IsNullOrEmpty(preferredProvider) &&
+               factoryName.Equals(preferredProvider, StringComparison.OrdinalIgnoreCase);
     }
 }
 
@@ -249,37 +325,57 @@ public class FallbackProviderSelector : IProviderSelectionStrategy
         IServiceProvider services)
     {
         var originalFailedProviders = new HashSet<string>(context.FailedProviders);
-        var attempts = 0;
         const int maxAttempts = 3;
 
-        while (attempts < maxAttempts)
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
         {
-            try
+            var provider = await TrySelectProviderAsync(context, services, attempt, maxAttempts);
+            if (provider != null)
             {
-                var provider = await _primarySelector.SelectProviderAsync(context, services);
-                _logger.LogDebug("Selected provider '{Provider}' on attempt {Attempt}", 
-                    provider.ProviderName, attempts + 1);
                 return provider;
-            }
-            catch (InvalidOperationException ex) when (attempts < maxAttempts - 1)
-            {
-                _logger.LogWarning(ex, "Provider selection failed on attempt {Attempt}",
-                    attempts + 1);
-                
-                // Add all currently known providers to failed list to force different selection
-                var availableProviders = await _primarySelector.GetProviderOptionsAsync(context, services);
-                foreach (var provider in availableProviders.Take(1)) // Just the top choice
-                {
-                    context.FailedProviders.Add(provider.ProviderName);
-                }
-                
-                attempts++;
             }
         }
 
         // Reset to original state and throw final exception
         context.FailedProviders = originalFailedProviders;
         return await _primarySelector.SelectProviderAsync(context, services);
+    }
+    
+    private async Task<IImageGenerationProvider?> TrySelectProviderAsync(
+        ProviderSelectionContext context, 
+        IServiceProvider services,
+        int attempt,
+        int maxAttempts)
+    {
+        try
+        {
+            var provider = await _primarySelector.SelectProviderAsync(context, services);
+            _logger.LogDebug("Selected provider '{Provider}' on attempt {Attempt}", 
+                provider.ProviderName, attempt + 1);
+            return provider;
+        }
+        catch (InvalidOperationException ex) when (attempt < maxAttempts - 1)
+        {
+            await HandleSelectionFailureAsync(context, services, attempt, ex);
+            return null;
+        }
+    }
+    
+    private async Task HandleSelectionFailureAsync(
+        ProviderSelectionContext context,
+        IServiceProvider services,
+        int attempt,
+        InvalidOperationException ex)
+    {
+        _logger.LogWarning(ex, "Provider selection failed on attempt {Attempt}", attempt + 1);
+        
+        var availableProviders = await _primarySelector.GetProviderOptionsAsync(context, services);
+        var topProvider = availableProviders.FirstOrDefault();
+        
+        if (topProvider != null)
+        {
+            context.FailedProviders.Add(topProvider.ProviderName);
+        }
     }
 
     /// <summary>
