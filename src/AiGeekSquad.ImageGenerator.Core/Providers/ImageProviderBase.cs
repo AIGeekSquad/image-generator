@@ -339,14 +339,31 @@ public abstract class ImageProviderBase : IImageGenerationProvider
 
         try
         {
-            var imageBytes = await HttpClient.GetByteArrayAsync(url, cancellationToken);
+            // Use GetAsync for better error handling and status code checking
+            using var response = await HttpClient.GetAsync(url, cancellationToken);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"HTTP {(int)response.StatusCode} {response.StatusCode} downloading image from {url}");
+                return null;
+            }
+
+            var imageBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
             return Convert.ToBase64String(imageBytes);
+        }
+        catch (HttpRequestException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"HTTP request failed downloading image from {url}: {ex.Message}");
+            return null;
+        }
+        catch (TaskCanceledException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Download timeout for image from {url}: {ex.Message}");
+            return null;
         }
         catch (Exception ex)
         {
-            // For now, return null and preserve URL in the response
-            // This allows the system to work even if download fails
-            System.Diagnostics.Debug.WriteLine($"Failed to download image from URL {url}: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Unexpected error downloading image from {url}: {ex.GetType().Name}: {ex.Message}");
             return null;
         }
     }
