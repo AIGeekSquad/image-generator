@@ -20,6 +20,9 @@ public class ImageGenerationTools(
     IImageGenerationService imageService,
     ILogger<ImageGenerationTools> logger)
 {
+    private const string DefaultProvider = "OpenAI";
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    
     [McpServerTool]
     [Description("Generate an image from a text prompt using various AI providers (OpenAI, Google, etc.)")]
     public async Task<string> GenerateImage(
@@ -35,10 +38,10 @@ public class ImageGenerationTools(
         {
             // Validate arguments first
             var validationErrors = ValidateGenerateImageArgs(prompt, quality, style, size, numberOfImages);
-            if (validationErrors.Any())
+            if (validationErrors.Count > 0)
             {
                 var errorResponse = new { error = string.Join("; ", validationErrors) };
-                return JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions { WriteIndented = true });
+                return JsonSerializer.Serialize(errorResponse, JsonOptions);
             }
 
             // Create a ChatMessage with the text prompt
@@ -58,15 +61,15 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.GenerateImageAsync(
-                provider ?? "OpenAI",
+                provider ?? DefaultProvider,
                 request);
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(result, JsonOptions);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error generating image");
-            return JsonSerializer.Serialize(new { error = ex.Message });
+            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOptions);
         }
     }
 
@@ -87,7 +90,7 @@ public class ImageGenerationTools(
             var conversation = JsonSerializer.Deserialize<List<CoreConversationMessage>>(conversationJson);
             if (conversation == null || conversation.Count == 0)
             {
-                return JsonSerializer.Serialize(new { error = "Conversation is required and must contain at least one message" });
+                return JsonSerializer.Serialize(new { error = "Conversation is required and must contain at least one message" }, JsonOptions);
             }
 
             var request = new CoreConversationalRequest
@@ -101,20 +104,20 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.GenerateImageFromConversationAsync(
-                provider ?? "OpenAI",
+                provider ?? DefaultProvider,
                 request);
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(result, JsonOptions);
         }
         catch (JsonException ex)
         {
             logger.LogError(ex, "Error parsing conversation JSON");
-            return JsonSerializer.Serialize(new { error = $"Invalid conversation JSON: {ex.Message}" });
+            return JsonSerializer.Serialize(new { error = $"Invalid conversation JSON: {ex.Message}" }, JsonOptions);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error generating image from conversation");
-            return JsonSerializer.Serialize(new { error = ex.Message });
+            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOptions);
         }
     }
 
@@ -148,15 +151,15 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.EditImageAsync(
-                provider ?? "OpenAI",
+                provider ?? DefaultProvider,
                 request);
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(result, JsonOptions);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error editing image");
-            return JsonSerializer.Serialize(new { error = ex.Message });
+            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOptions);
         }
     }
 
@@ -180,15 +183,15 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.CreateVariationAsync(
-                provider ?? "OpenAI",
+                provider ?? DefaultProvider,
                 request);
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(result, JsonOptions);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating image variation");
-            return JsonSerializer.Serialize(new { error = ex.Message });
+            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOptions);
         }
     }
 
@@ -205,12 +208,12 @@ public class ImageGenerationTools(
                 Capabilities = p.GetCapabilities()
             }).ToList();
 
-            return JsonSerializer.Serialize(providerInfo, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(providerInfo, JsonOptions);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error listing providers");
-            return JsonSerializer.Serialize(new { error = ex.Message });
+            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOptions);
         }
     }
 

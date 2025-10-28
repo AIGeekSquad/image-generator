@@ -6,7 +6,7 @@ namespace AiGeekSquad.ImageGenerator.Core.Adapters;
 /// <summary>
 /// Interface for adapting different request formats to the unified request model
 /// </summary>
-public interface IRequestAdapter<TSource>
+public interface IRequestAdapter<in TSource>
 {
     /// <summary>
     /// Adapts a source request format to the unified request model
@@ -28,8 +28,7 @@ public class ImageGenerationRequestAdapter : IRequestAdapter<ImageGenerationRequ
     /// <returns>Unified request format</returns>
     public UnifiedImageRequest Adapt(ImageGenerationRequest source)
     {
-        if (source == null)
-            throw new ArgumentNullException(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         return new UnifiedImageRequest
         {
@@ -93,8 +92,7 @@ public class ConversationalRequestAdapter : IRequestAdapter<ConversationalImageG
     /// <returns>Unified request format</returns>
     public UnifiedImageRequest Adapt(ConversationalImageGenerationRequest source)
     {
-        if (source == null)
-            throw new ArgumentNullException(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         var images = new List<ImageReference>();
         var messages = new List<Microsoft.Extensions.AI.ChatMessage>();
@@ -105,50 +103,12 @@ public class ConversationalRequestAdapter : IRequestAdapter<ConversationalImageG
         {
             foreach (var convMsg in source.Conversation)
             {
-                var role = convMsg.Role?.ToLowerInvariant() switch
-                {
-                    "user" => Microsoft.Extensions.AI.ChatRole.User,
-                    "assistant" => Microsoft.Extensions.AI.ChatRole.Assistant,
-                    "system" => Microsoft.Extensions.AI.ChatRole.System,
-                    _ => Microsoft.Extensions.AI.ChatRole.User
-                };
-
-                var chatMessage = new Microsoft.Extensions.AI.ChatMessage(role, convMsg.Text ?? string.Empty);
-
-                // Extract images from conversation messages
-                if (convMsg.Images != null && convMsg.Images.Count > 0)
-                {
-                    foreach (var img in convMsg.Images)
-                    {
-                        images.Add(new ImageReference
-                        {
-                            Url = img.Url,
-                            Base64Data = img.Base64Data,
-                            MimeType = img.MimeType,
-                            Caption = img.Caption,
-                            Role = ImageRole.Reference
-                        });
-
-                        // Also add to chat message content
-                        if (!string.IsNullOrEmpty(img.Url))
-                        {
-                            chatMessage.Contents.Add(new Microsoft.Extensions.AI.DataContent(new Uri(img.Url), "image/*"));
-                        }
-                        else if (!string.IsNullOrEmpty(img.Base64Data))
-                        {
-                            var bytes = Convert.FromBase64String(img.Base64Data);
-                            var mimeType = img.MimeType ?? "image/png";
-                            chatMessage.Contents.Add(new Microsoft.Extensions.AI.DataContent(bytes, mimeType));
-                        }
-                    }
-                }
-
+                var (chatMessage, userPrompt) = ConvertConversationMessage(convMsg, images);
                 messages.Add(chatMessage);
                 
-                // Use the last user message as the primary prompt
-                if (role == Microsoft.Extensions.AI.ChatRole.User && !string.IsNullOrEmpty(convMsg.Text))
+                if (!string.IsNullOrEmpty(userPrompt))
                 {
-                    prompt = convMsg.Text;
+                    prompt = userPrompt;
                 }
             }
         }
@@ -169,5 +129,81 @@ public class ConversationalRequestAdapter : IRequestAdapter<ConversationalImageG
             Operation = ImageOperation.GenerateFromConversation,
             AdditionalParameters = source.AdditionalParameters ?? new Dictionary<string, object>()
         };
+    }
+    
+    private static (Microsoft.Extensions.AI.ChatMessage ChatMessage, string? UserPrompt) ConvertConversationMessage(
+        ConversationMessage convMsg, 
+        List<ImageReference> images)
+    {
+        var role = ParseMessageRole(convMsg.Role);
+        var chatMessage = new Microsoft.Extensions.AI.ChatMessage(role, convMsg.Text ?? string.Empty);
+        
+        ProcessMessageImages(convMsg, images, chatMessage);
+        
+        var userPrompt = GetUserPrompt(role, convMsg.Text);
+        return (chatMessage, userPrompt);
+    }
+    
+    private static Microsoft.Extensions.AI.ChatRole ParseMessageRole(string? role)
+    {
+        return role?.ToLowerInvariant() switch
+        {
+            "user" => Microsoft.Extensions.AI.ChatRole.User,
+            "assistant" => Microsoft.Extensions.AI.ChatRole.Assistant,
+            "system" => Microsoft.Extensions.AI.ChatRole.System,
+            _ => Microsoft.Extensions.AI.ChatRole.User
+        };
+    }
+    
+    private static void ProcessMessageImages(
+        ConversationMessage convMsg, 
+        List<ImageReference> images, 
+        Microsoft.Extensions.AI.ChatMessage chatMessage)
+    {
+        if (convMsg.Images == null || convMsg.Images.Count == 0)
+        {
+            return;
+        }
+        
+        foreach (var img in convMsg.Images)
+        {
+            images.Add(CreateImageReference(img));
+            AddImageToChatMessage(img, chatMessage);
+        }
+    }
+    
+    private static ImageReference CreateImageReference(ImageContent img)
+    {
+        return new ImageReference
+        {
+            Url = img.Url,
+            Base64Data = img.Base64Data,
+            MimeType = img.MimeType,
+            Caption = img.Caption,
+            Role = ImageRole.Reference
+        };
+    }
+    
+    private static void AddImageToChatMessage(ImageContent img, Microsoft.Extensions.AI.ChatMessage chatMessage)
+    {
+        if (!string.IsNullOrEmpty(img.Url))
+        {
+            chatMessage.Contents.Add(new Microsoft.Extensions.AI.DataContent(new Uri(img.Url), "image/*"));
+        }
+        else if (!string.IsNullOrEmpty(img.Base64Data))
+        {
+            var bytes = Convert.FromBase64String(img.Base64Data);
+            var mimeType = img.MimeType ?? "image/png";
+            chatMessage.Contents.Add(new Microsoft.Extensions.AI.DataContent(bytes, mimeType));
+        }
+    }
+    
+    private static string? GetUserPrompt(Microsoft.Extensions.AI.ChatRole role, string? text)
+    {
+        if (role == Microsoft.Extensions.AI.ChatRole.User && !string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+        return null;
     }
 }

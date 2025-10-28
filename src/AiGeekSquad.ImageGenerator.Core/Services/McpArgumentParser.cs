@@ -79,7 +79,7 @@ public class ImageSize
 public class ValidationResult
 {
     /// <summary>Gets whether the validation passed (no errors)</summary>
-    public bool IsValid => !Errors.Any();
+    public bool IsValid => Errors.Count == 0;
     /// <summary>Gets or sets the list of validation errors</summary>
     public List<string> Errors { get; set; } = new();
     /// <summary>Gets or sets the list of validation warnings</summary>
@@ -91,6 +91,8 @@ public class ValidationResult
 /// </summary>
 public class McpArgumentParser : IArgumentParser
 {
+    private static readonly char[] SizeSeparators = { 'x', 'X' };
+    
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -104,8 +106,7 @@ public class McpArgumentParser : IArgumentParser
     /// <returns>Parsed arguments object</returns>
     public ParsedArguments Parse(Dictionary<string, object?> args)
     {
-        if (args == null)
-            throw new ArgumentNullException(nameof(args));
+        ArgumentNullException.ThrowIfNull(args);
 
         var parsed = new ParsedArguments();
 
@@ -232,7 +233,7 @@ public class McpArgumentParser : IArgumentParser
         if (string.IsNullOrWhiteSpace(sizeString))
             return null;
 
-        var parts = sizeString.Split(new[] { 'x', 'X' }, StringSplitOptions.None);
+        var parts = sizeString.Split(SizeSeparators, StringSplitOptions.None);
         if (parts.Length != 2)
             return null;
 
