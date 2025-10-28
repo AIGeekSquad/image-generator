@@ -58,7 +58,7 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.GenerateImageAsync(
-                provider ?? DefaultProviderName,
+                provider ?? "OpenAI",
                 request);
 
             return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
@@ -101,7 +101,7 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.GenerateImageFromConversationAsync(
-                provider ?? DefaultProviderName,
+                provider ?? "OpenAI",
                 request);
 
             return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
@@ -148,7 +148,7 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.EditImageAsync(
-                provider ?? DefaultProviderName,
+                provider ?? "OpenAI",
                 request);
 
             return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
@@ -180,7 +180,7 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.CreateVariationAsync(
-                provider ?? DefaultProviderName,
+                provider ?? "OpenAI",
                 request);
 
             return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
