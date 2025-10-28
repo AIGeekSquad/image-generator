@@ -1,21 +1,30 @@
+using System.Reflection;
+using System.ClientModel;
 using AiGeekSquad.ImageGenerator.Core.Adapters;
 using OpenAI.Images;
-using System.Reflection;
 
-namespace AiGeekSquad.ImageGenerator.Tests.Providers;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.Providers;
 
 /// <summary>
 /// Test implementation of IOpenAIAdapter for testing without requiring API keys
 /// </summary>
 internal class TestOpenAIAdapter : IOpenAIAdapter
 {
-    private readonly Uri? _imageUri;
+    private readonly BinaryData? _imageData;
     private readonly string? _revisedPrompt;
 
-    public TestOpenAIAdapter(Uri? imageUri = null, string? revisedPrompt = null)
+    public TestOpenAIAdapter(BinaryData? imageData = null, string? revisedPrompt = null)
     {
-        _imageUri = imageUri ?? new Uri("https://example.com/test-image.png");
+        _imageData = imageData ?? CreateSampleImageData();
         _revisedPrompt = revisedPrompt;
+    }
+
+    private static BinaryData CreateSampleImageData()
+    {
+        // Create a simple 1x1 pixel PNG as Base64 for testing
+        var base64Data = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+        var bytes = Convert.FromBase64String(base64Data);
+        return new BinaryData(bytes);
     }
 
     public Task<GeneratedImage> GenerateImageAsync(
@@ -24,7 +33,7 @@ internal class TestOpenAIAdapter : IOpenAIAdapter
         ImageGenerationOptions options,
         CancellationToken cancellationToken = default)
     {
-        var image = CreateGeneratedImage(_imageUri, _revisedPrompt);
+        var image = CreateGeneratedImage(_imageData, _revisedPrompt);
         return Task.FromResult(image);
     }
 
@@ -36,7 +45,7 @@ internal class TestOpenAIAdapter : IOpenAIAdapter
         ImageEditOptions options,
         CancellationToken cancellationToken = default)
     {
-        var generatedImage = CreateGeneratedImage(_imageUri, _revisedPrompt);
+        var generatedImage = CreateGeneratedImage(_imageData, _revisedPrompt);
         return Task.FromResult(generatedImage);
     }
 
@@ -47,13 +56,13 @@ internal class TestOpenAIAdapter : IOpenAIAdapter
         ImageVariationOptions options,
         CancellationToken cancellationToken = default)
     {
-        var generatedImage = CreateGeneratedImage(_imageUri, null);
+        var generatedImage = CreateGeneratedImage(_imageData, null);
         return Task.FromResult(generatedImage);
     }
 
-    private static GeneratedImage CreateGeneratedImage(Uri? imageUri, string? revisedPrompt)
+    private static GeneratedImage CreateGeneratedImage(BinaryData? imageData, string? revisedPrompt)
     {
-        // Use the internal constructor that accepts imageUri and revisedPrompt
+        // Use the internal constructor that accepts BinaryData, Uri, and revisedPrompt
         var type = typeof(GeneratedImage);
         var constructor = type.GetConstructor(
             BindingFlags.NonPublic | BindingFlags.Instance,
@@ -63,7 +72,8 @@ internal class TestOpenAIAdapter : IOpenAIAdapter
         
         if (constructor != null)
         {
-            var instance = constructor.Invoke([null!, imageUri!, revisedPrompt!, null!]);
+            var testUri = new Uri("https://example.com/test-image.png");
+            var instance = constructor.Invoke([imageData!, testUri, revisedPrompt!, null!]);
             return (GeneratedImage)instance;
         }
         

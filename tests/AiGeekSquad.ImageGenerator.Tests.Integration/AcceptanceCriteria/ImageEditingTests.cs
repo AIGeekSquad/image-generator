@@ -1,15 +1,10 @@
-using Microsoft.Extensions.AI;
-using FluentAssertions;
-using FluentAssertions.Execution;
-using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
-using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
-using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
-using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
+using FluentAssertions;
+using Microsoft.Extensions.AI;
 using Moq;
 
-namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.AcceptanceCriteria;
 
 /// <summary>
 /// Acceptance Criteria Tests: Verify image editing and variation capabilities
@@ -65,7 +60,7 @@ public class ImageEditingTests
     }
 
     [Fact]
-    public async Task AC4_Provider_IndicatesEditSupport()
+    public void AC4_Provider_IndicatesEditSupport()
     {
         // Acceptance Criteria: Providers should indicate whether they support edit and variation operations
         var provider = new Mock<IImageGenerationProvider>();

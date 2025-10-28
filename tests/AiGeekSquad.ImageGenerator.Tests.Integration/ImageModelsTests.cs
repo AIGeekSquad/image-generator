@@ -1,9 +1,8 @@
-using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using FluentAssertions;
 using FluentAssertions.Execution;
 
-namespace AiGeekSquad.ImageGenerator.Tests;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration;
 
 public class ImageModelsTests
 {
@@ -16,7 +15,7 @@ public class ImageModelsTests
             ImageModels.OpenAI.DallE3.Should().NotBeNullOrEmpty();
             ImageModels.OpenAI.DallE2.Should().NotBeNullOrEmpty();
             ImageModels.OpenAI.GPTImage1.Should().NotBeNullOrEmpty();
-            ImageModels.OpenAI.GPT5Image.Should().NotBeNullOrEmpty();
+            ImageModels.OpenAI.GPTImage1Mini.Should().NotBeNullOrEmpty();
             ImageModels.OpenAI.Default.Should().NotBeNullOrEmpty();
         }
     }

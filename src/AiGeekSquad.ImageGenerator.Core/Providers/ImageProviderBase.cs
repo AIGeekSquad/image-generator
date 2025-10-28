@@ -15,9 +15,6 @@ namespace AiGeekSquad.ImageGenerator.Core.Providers;
 /// </summary>
 public abstract class ImageProviderBase : IImageGenerationProvider
 {
-    // Shared HttpClient for downloading images from URLs
-    private static readonly HttpClient SharedHttpClient = new();
-    
     /// <summary>
     /// HTTP client for downloading images from URLs
     /// </summary>
@@ -26,10 +23,10 @@ public abstract class ImageProviderBase : IImageGenerationProvider
     /// <summary>
     /// Initializes a new instance of the provider base class
     /// </summary>
-    /// <param name="httpClient">Optional HTTP client for downloading images (uses shared client if not provided)</param>
-    protected ImageProviderBase(HttpClient? httpClient = null)
+    /// <param name="httpClient">HTTP client for downloading images (required)</param>
+    protected ImageProviderBase(HttpClient httpClient)
     {
-        HttpClient = httpClient ?? SharedHttpClient;
+        HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
     /// <summary>
@@ -320,11 +317,74 @@ public abstract class ImageProviderBase : IImageGenerationProvider
     protected CoreImageResponse BuildSingleImageResponseFromBase64(
         string? base64Data,
         string model,
+        string? revisedPrompt = null,
         Dictionary<string, object>? additionalMetadata = null)
     {
         var image = new GeneratedImageModel
         {
-            Base64Data = base64Data
+            Base64Data = base64Data,
+            RevisedPrompt = revisedPrompt
+        };
+
+        return BuildResponse(new[] { image }, model, additionalMetadata);
+    }
+
+    /// <summary>
+    /// Helper method to download image from URL and convert to Base64
+    /// </summary>
+    protected async Task<string?> DownloadImageAsBase64Async(string? url, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(url))
+            return null;
+
+        try
+        {
+            // Use GetAsync for better error handling and status code checking
+            using var response = await HttpClient.GetAsync(url, cancellationToken);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                // Silently fail for now - preserve URLs when download fails
+                return null;
+            }
+
+            var imageBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+            return Convert.ToBase64String(imageBytes);
+        }
+        catch (HttpRequestException)
+        {
+            // Silently fail - preserve URL when download fails
+            return null;
+        }
+        catch (TaskCanceledException)
+        {
+            // Silently fail - download timeout
+            return null;
+        }
+        catch (Exception)
+        {
+            // Silently fail - unexpected error
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Helper method to create a single-image response from URL by downloading and converting to Base64
+    /// </summary>
+    protected async Task<CoreImageResponse> BuildSingleImageResponseFromUrlAsync(
+        string? url,
+        string model,
+        string? revisedPrompt = null,
+        Dictionary<string, object>? additionalMetadata = null,
+        CancellationToken cancellationToken = default)
+    {
+        var base64Data = await DownloadImageAsBase64Async(url, cancellationToken);
+        
+        var image = new GeneratedImageModel
+        {
+            Url = url, // Preserve original URL
+            Base64Data = base64Data, // Downloaded data (may be null if download failed)
+            RevisedPrompt = revisedPrompt
         };
 
         return BuildResponse(new[] { image }, model, additionalMetadata);

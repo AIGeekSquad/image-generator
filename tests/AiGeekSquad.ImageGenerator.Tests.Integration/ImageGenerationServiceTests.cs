@@ -1,14 +1,14 @@
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Services;
-using Microsoft.Extensions.AI;
-using Moq;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.Extensions.AI;
+using Moq;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 
-namespace AiGeekSquad.ImageGenerator.Tests;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration;
 
 public class ImageGenerationServiceTests
 {
@@ -49,7 +49,6 @@ public class ImageGenerationServiceTests
         var result = service.GetProvider("TestProvider");
 
         // Assert
-        using var scope = new AssertionScope();
         result.Should().NotBeNull();
         result!.ProviderName.Should().Be("TestProvider");
     }
@@ -94,7 +93,7 @@ public class ImageGenerationServiceTests
         };
 
         // Act
-        var result = await service.GenerateImageAsync("TestProvider", request);
+        var result = await service.GenerateImageAsync("TestProvider", request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -162,7 +161,7 @@ public class ImageGenerationServiceTests
         };
 
         // Act
-        var result = await service.EditImageAsync("TestProvider", request);
+        var result = await service.EditImageAsync("TestProvider", request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -232,7 +231,7 @@ public class ImageGenerationServiceTests
         };
 
         // Act
-        var result = await service.CreateVariationAsync("TestProvider", request);
+        var result = await service.CreateVariationAsync("TestProvider", request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -303,7 +302,7 @@ public class ImageGenerationServiceTests
         };
 
         // Act
-        var result = await service.GenerateImageFromConversationAsync("TestProvider", request);
+        var result = await service.GenerateImageFromConversationAsync("TestProvider", request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();

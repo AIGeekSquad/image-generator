@@ -1,7 +1,6 @@
 using Azure.AI.OpenAI;
 using OpenAI;
 using OpenAI.Images;
-using Microsoft.Extensions.AI;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
@@ -18,7 +17,6 @@ namespace AiGeekSquad.ImageGenerator.Core.Providers;
 public class OpenAIImageProvider : ImageProviderBase
 {
     private readonly IOpenAIAdapter _adapter;
-    private readonly string? _defaultDeployment;
 
     /// <summary>
     /// Gets the provider name
@@ -36,9 +34,9 @@ public class OpenAIImageProvider : ImageProviderBase
     /// <param name="apiKey">OpenAI API key</param>
     /// <param name="endpoint">Optional Azure OpenAI endpoint URL</param>
     /// <param name="defaultDeployment">Optional default model deployment name</param>
-    /// <param name="httpClient">Optional HTTP client for downloading images</param>
+    /// <param name="httpClient">HTTP client for downloading images</param>
     public OpenAIImageProvider(string apiKey, string? endpoint = null, string? defaultDeployment = null, HttpClient? httpClient = null)
-        : this(CreateAdapter(apiKey, endpoint), defaultDeployment, httpClient)
+        : this(CreateAdapter(apiKey, endpoint), defaultDeployment, httpClient ?? new HttpClient())
     {
     }
 
@@ -47,12 +45,12 @@ public class OpenAIImageProvider : ImageProviderBase
     /// </summary>
     /// <param name="adapter">Custom OpenAI adapter implementation</param>
     /// <param name="defaultDeployment">Optional default model deployment name</param>
-    /// <param name="httpClient">Optional HTTP client for downloading images</param>
+    /// <param name="httpClient">HTTP client for downloading images</param>
     public OpenAIImageProvider(IOpenAIAdapter adapter, string? defaultDeployment = null, HttpClient? httpClient = null)
-        : base(httpClient)
+        : base(httpClient ?? new HttpClient())
     {
         _adapter = adapter;
-        _defaultDeployment = defaultDeployment;
+        var defaultModel = defaultDeployment ?? ImageModels.OpenAI.DallE3;
 
         Capabilities = new ProviderCapabilities
         {
@@ -61,7 +59,7 @@ public class OpenAIImageProvider : ImageProviderBase
                 ImageModels.OpenAI.DallE3,
                 ImageModels.OpenAI.DallE2,
                 ImageModels.OpenAI.GPTImage1,
-                ImageModels.OpenAI.GPT5Image
+                ImageModels.OpenAI.GPTImage1Mini
             },
             SupportedOperations = new List<ImageOperation>
             {
@@ -69,7 +67,7 @@ public class OpenAIImageProvider : ImageProviderBase
                 ImageOperation.Edit,
                 ImageOperation.Variation
             },
-            DefaultModel = _defaultDeployment ?? ImageModels.OpenAI.DallE3,
+            DefaultModel = defaultModel,
             AcceptsCustomModels = true,
             Features = new Dictionary<string, object>
             {
@@ -112,10 +110,13 @@ public class OpenAIImageProvider : ImageProviderBase
         var model = GetModelOrDefault(request.Model);
         var prompt = ExtractTextFromMessages(request.Messages);
 
-        var options = new OpenAI.Images.ImageGenerationOptions
+        var options = new OpenAI.Images.ImageGenerationOptions();
+        
+        // Only set ResponseFormat for DALL-E models - gpt-image-1 always returns base64 and doesn't support this parameter
+        if (model.StartsWith("dall-e-", StringComparison.OrdinalIgnoreCase))
         {
-            ResponseFormat = GeneratedImageFormat.Uri
-        };
+            options.ResponseFormat = GeneratedImageFormat.Uri;
+        }
 
         var size = ParseSize(request.Size);
         if (size.HasValue)
@@ -135,12 +136,13 @@ public class OpenAIImageProvider : ImageProviderBase
             options.Style = style.Value;
         }
 
+        // Note: Multiple image generation with DALL-E 2 is currently limited by OpenAI SDK
+        // The SDK's GenerateImageAsync method only returns a single image at this time
+
         var result = await _adapter.GenerateImageAsync(model, prompt, options, cancellationToken);
 
-        return BuildSingleImageResponse(
-            result.ImageUri?.ToString(),
-            model,
-            result.RevisedPrompt);
+        // Handle response based on model type
+        return await BuildImageResponseAsync(result, model, cancellationToken);
     }
 
     /// <summary>
@@ -157,10 +159,13 @@ public class OpenAIImageProvider : ImageProviderBase
         var prompt = ExtractTextFromMessages(request.Messages);
         var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
 
-        var options = new ImageEditOptions
+        var options = new ImageEditOptions();
+        
+        // Only set ResponseFormat for DALL-E models - gpt-image-1 always returns base64 and doesn't support this parameter
+        if (model.StartsWith("dall-e-", StringComparison.OrdinalIgnoreCase))
         {
-            ResponseFormat = GeneratedImageFormat.Uri
-        };
+            options.ResponseFormat = GeneratedImageFormat.Uri;
+        }
 
         var size = ParseSize(request.Size);
         if (size.HasValue)
@@ -176,10 +181,8 @@ public class OpenAIImageProvider : ImageProviderBase
             options,
             cancellationToken);
 
-        return BuildSingleImageResponse(
-            result.ImageUri?.ToString(),
-            model,
-            result.RevisedPrompt);
+        // Handle response based on model type
+        return await BuildImageResponseAsync(result, model, cancellationToken);
     }
 
     /// <summary>
@@ -195,10 +198,13 @@ public class OpenAIImageProvider : ImageProviderBase
         var model = request.Model ?? ImageModels.OpenAI.DallE2;
         var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
 
-        var options = new ImageVariationOptions
+        var options = new ImageVariationOptions();
+        
+        // Only set ResponseFormat for DALL-E models - gpt-image-1 always returns base64 and doesn't support this parameter
+        if (model.StartsWith("dall-e-", StringComparison.OrdinalIgnoreCase))
         {
-            ResponseFormat = GeneratedImageFormat.Uri
-        };
+            options.ResponseFormat = GeneratedImageFormat.Uri;
+        }
 
         var size = ParseSize(request.Size);
         if (size.HasValue)
@@ -213,8 +219,53 @@ public class OpenAIImageProvider : ImageProviderBase
             options,
             cancellationToken);
 
-        return BuildSingleImageResponse(result.ImageUri?.ToString(), model);
+        return await BuildSingleImageResponseFromUrlAsync(result.ImageUri?.ToString(), model, null, null, cancellationToken);
     }
+    /// <summary>
+    /// Builds a CoreImageResponse from an OpenAI result, handling both GPT image models (Base64) and DALL-E models (URLs)
+    /// </summary>
+    /// <param name="result">The OpenAI GeneratedImage result</param>
+    /// <param name="model">The model name used for generation</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A properly formatted CoreImageResponse</returns>
+    private async Task<CoreImageResponse> BuildImageResponseAsync(
+        OpenAI.Images.GeneratedImage result,
+        string model,
+        CancellationToken cancellationToken)
+    {
+        // Check model type first - GPT Image models return Base64, DALL-E models return URLs
+        if (model.StartsWith("gpt-image", StringComparison.OrdinalIgnoreCase) && result.ImageBytes != null)
+        {
+            // GPT Image models - use Base64 data directly
+            var imageBytes = result.ImageBytes.ToArray();
+            var base64Data = Convert.ToBase64String((byte[])imageBytes);
+            return new CoreImageResponse
+            {
+                Images = new List<Models.GeneratedImage>
+                {
+                    new()
+                    {
+                        Base64Data = base64Data,
+                        Url = null,
+                        RevisedPrompt = result.RevisedPrompt
+                    }
+                },
+                Model = model,
+                Provider = "OpenAI"
+            };
+        }
+        else
+        {
+            // DALL-E models or fallback - download from URL
+            return await BuildSingleImageResponseFromUrlAsync(
+                result.ImageUri?.ToString(),
+                model,
+                result.RevisedPrompt,
+                null,
+                cancellationToken);
+        }
+    }
+
 
     private static GeneratedImageSize? ParseSize(string? size)
     {

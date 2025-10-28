@@ -1,6 +1,5 @@
 using Google.Cloud.AIPlatform.V1;
 using System.Text.Json;
-using Microsoft.Extensions.AI;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using GeneratedImageModel = AiGeekSquad.ImageGenerator.Core.Models.GeneratedImage;
@@ -35,9 +34,9 @@ public class GoogleImageProvider : ImageProviderBase
     /// <param name="projectId">Google Cloud project ID</param>
     /// <param name="location">Google Cloud region (default: us-central1)</param>
     /// <param name="defaultModel">Optional default model name</param>
-    /// <param name="httpClient">Optional HTTP client for downloading images</param>
+    /// <param name="httpClient">HTTP client for downloading images</param>
     public GoogleImageProvider(string projectId, string location = "us-central1", string? defaultModel = null, HttpClient? httpClient = null)
-        : this(new GoogleImageAdapter(PredictionServiceClient.Create()), projectId, location, defaultModel, httpClient)
+        : this(new GoogleImageAdapter(PredictionServiceClient.Create()), projectId, location, defaultModel, httpClient ?? new HttpClient())
     {
     }
 
@@ -48,9 +47,9 @@ public class GoogleImageProvider : ImageProviderBase
     /// <param name="projectId">Google Cloud project ID</param>
     /// <param name="location">Google Cloud region (default: us-central1)</param>
     /// <param name="defaultModel">Optional default model name</param>
-    /// <param name="httpClient">Optional HTTP client for downloading images</param>
+    /// <param name="httpClient">HTTP client for downloading images</param>
     public GoogleImageProvider(IGoogleImageAdapter adapter, string projectId, string location = "us-central1", string? defaultModel = null, HttpClient? httpClient = null)
-        : base(httpClient)
+        : base(httpClient ?? new HttpClient())
     {
         _adapter = adapter;
         _projectId = projectId;

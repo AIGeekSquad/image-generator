@@ -1,10 +1,9 @@
 using AiGeekSquad.ImageGenerator.Core.Adapters;
 using Google.Cloud.AIPlatform.V1;
-using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using ProtobufValue = Google.Protobuf.WellKnownTypes.Value;
 
-namespace AiGeekSquad.ImageGenerator.Tests.Providers;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.Providers;
 
 /// <summary>
 /// Test implementation of IGoogleImageAdapter for testing without requiring GCP credentials

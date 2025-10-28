@@ -1,6 +1,6 @@
-using AiGeekSquad.ImageGenerator.Core.Providers;
-using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
+using AiGeekSquad.ImageGenerator.Core.Models;
+using AiGeekSquad.ImageGenerator.Core.Providers;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.AI;
@@ -8,7 +8,7 @@ using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationR
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
 using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
 
-namespace AiGeekSquad.ImageGenerator.Tests.Providers;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.Providers;
 
 /// <summary>
 /// Tests for OpenAIImageProvider to verify provider functionality and increase code coverage
@@ -22,7 +22,6 @@ public class OpenAIImageProviderTests
         var provider = new OpenAIImageProvider("test-api-key");
 
         // Assert
-        using var scope = new AssertionScope();
         provider.Should().NotBeNull();
         provider.ProviderName.Should().Be("OpenAI");
     }
@@ -37,7 +36,6 @@ public class OpenAIImageProviderTests
         var provider = new OpenAIImageProvider(adapter);
 
         // Assert
-        using var scope = new AssertionScope();
         provider.Should().NotBeNull();
         provider.ProviderName.Should().Be("OpenAI");
     }
@@ -52,7 +50,6 @@ public class OpenAIImageProviderTests
             "test-deployment");
 
         // Assert
-        using var scope = new AssertionScope();
         provider.Should().NotBeNull();
         provider.ProviderName.Should().Be("OpenAI");
     }

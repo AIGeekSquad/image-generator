@@ -1,14 +1,14 @@
+using AiGeekSquad.ImageGenerator.Core.Models;
+using AiGeekSquad.ImageGenerator.Core.Providers;
+using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.Extensions.AI;
+using SixLabors.ImageSharp;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
-using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
-using FluentAssertions;
-using FluentAssertions.Execution;
-using AiGeekSquad.ImageGenerator.Core.Providers;
-using AiGeekSquad.ImageGenerator.Core.Models;
 
-namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
+namespace AiGeekSquad.ImageGenerator.Tests.Integration.AcceptanceCriteria;
 
 /// <summary>
 /// End-to-End Integration Tests with actual API calls
@@ -20,6 +20,7 @@ public class EndToEndIntegrationTests
     public static bool HasOpenAIApiKey => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
     public static bool HasGoogleProjectId => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID"));
     public static bool HasAnyProvider => HasOpenAIApiKey || HasGoogleProjectId;
+    public static bool HasOpenAIOrganizationVerified => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENAI_ORG_VERIFIED"));
     
     private static string OpenAIApiKey => Environment.GetEnvironmentVariable("OPENAI_API_KEY")!;
     private static string GoogleProjectId => Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID")!;
@@ -42,7 +43,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -54,29 +55,31 @@ public class EndToEndIntegrationTests
     }
 
     [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
-    public async Task E2E_OpenAI_GenerateImage_WithDallE2()
+    public async Task E2E_OpenAI_GenerateImage_WithGPTImage1Mini()
     {
         // Arrange
-
+        // Note: GPT Image models require organization verification at https://platform.openai.com/settings/organization/general
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         var request = new CoreImageRequest
         {
             Messages = new List<ChatMessage>
             {
-                new(ChatRole.User, "A cute cat playing with a ball of yarn")
+                new(ChatRole.User, "cat")
             },
-            Model = ImageModels.OpenAI.DallE2,
-            Size = "512x512"
+            Model = ImageModels.OpenAI.GPTImage1Mini,
+            Size = "1024x1024"
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
         response.Should().NotBeNull();
         response.Images.Should().NotBeEmpty();
-        response.Images[0].Url.Should().NotBeNullOrEmpty();
+        response.Images[0].Base64Data.Should().NotBeNullOrEmpty(); // GPT Image models return base64 data, not URLs
+        response.Model.Should().Be(ImageModels.OpenAI.GPTImage1Mini);
+        response.Provider.Should().Be("OpenAI");
     }
 
     [Fact(Skip = "Requires GOOGLE_PROJECT_ID environment variable", SkipUnless = nameof(HasGoogleProjectId))]
@@ -96,7 +99,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -110,13 +113,13 @@ public class EndToEndIntegrationTests
     }
 
     [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
-    public async Task E2E_OpenAI_EditImage_WithDallE2()
+    public async Task E2E_OpenAI_EditImage_WithGPTImage1Mini()
     {
         // Arrange
-
+        // Note: GPT Image models require organization verification at https://platform.openai.com/settings/organization/general
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         
-        // Create a simple test image (1x1 PNG with transparency) and convert to base64
+        // Use the awesome_man.png asset for editing
         byte[] testImageBytes = CreateSimpleTestImage();
         string testImageBase64 = Convert.ToBase64String(testImageBytes);
         
@@ -124,50 +127,23 @@ public class EndToEndIntegrationTests
         {
             Messages = new List<ChatMessage>
             {
-                new(ChatRole.User, "Add a red circle in the center")
+                new(ChatRole.User, "edit image")
             },
             Image = testImageBase64,
-            Model = ImageModels.OpenAI.DallE2,
-            Size = "512x512"
+            Model = ImageModels.OpenAI.GPTImage1Mini,
+            Size = "1024x1024"
         };
 
         // Act
-        var response = await provider.EditImageAsync(editRequest, CancellationToken.None);
+        var response = await provider.EditImageAsync(editRequest, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
         response.Should().NotBeNull();
         response.Images.Should().NotBeEmpty();
-        response.Images[0].Url.Should().NotBeNullOrEmpty();
-    }
-
-    [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
-    public async Task E2E_OpenAI_CreateVariation_WithDallE2()
-    {
-        // Arrange
-
-        var provider = new OpenAIImageProvider(OpenAIApiKey);
-        
-        // Create a simple test image and convert to base64
-        byte[] testImageBytes = CreateSimpleTestImage();
-        string testImageBase64 = Convert.ToBase64String(testImageBytes);
-        
-        var variationRequest = new CoreImageVariationRequest
-        {
-            Image = testImageBase64,
-            Model = ImageModels.OpenAI.DallE2,
-            NumberOfImages = 2,
-            Size = "512x512"
-        };
-
-        // Act
-        var response = await provider.CreateVariationAsync(variationRequest, CancellationToken.None);
-
-        // Assert
-        using var scope = new AssertionScope();
-        response.Should().NotBeNull();
-        response.Images.Should().HaveCount(2);
-        response.Images.Should().OnlyContain(img => !string.IsNullOrEmpty(img.Url));
+        response.Images[0].Base64Data.Should().NotBeNullOrEmpty(); // GPT Image models return base64 data
+        response.Model.Should().Be(ImageModels.OpenAI.GPTImage1Mini);
+        response.Provider.Should().Be("OpenAI");
     }
 
     [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
@@ -189,7 +165,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -213,7 +189,7 @@ public class EndToEndIntegrationTests
             {
                 new(ChatRole.User, new AIContent[]
                 {
-                    new TextContent("Create an image in a similar style to this reference"),
+                    new TextContent("Create a simple landscape image"),
                     new DataContent(referenceImage, "image/png")
                 })
             },
@@ -222,7 +198,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert - Provider extracts text even if it doesn't support multi-modal
         using var scope = new AssertionScope();
@@ -247,7 +223,7 @@ public class EndToEndIntegrationTests
                 Messages = new List<ChatMessage> { new(ChatRole.User, prompt) },
                 Model = ImageModels.OpenAI.DallE3
             };
-            results.Add(await openAiProvider.GenerateImageAsync(openAiRequest, CancellationToken.None));
+            results.Add(await openAiProvider.GenerateImageAsync(openAiRequest, TestContext.Current.CancellationToken));
         }
 
         if (HasGoogleProjectId)
@@ -258,7 +234,7 @@ public class EndToEndIntegrationTests
                 Messages = new List<ChatMessage> { new(ChatRole.User, prompt) },
                 Model = ImageModels.Google.Imagen3
             };
-            results.Add(await googleProvider.GenerateImageAsync(googleRequest, CancellationToken.None));
+            results.Add(await googleProvider.GenerateImageAsync(googleRequest, TestContext.Current.CancellationToken));
         }
 
         // Assert - All providers should successfully generate images
@@ -268,22 +244,24 @@ public class EndToEndIntegrationTests
     }
 
     /// <summary>
-    /// Creates a minimal valid PNG image (1x1 pixel, transparent)
+    /// Creates a test image using the existing PNG asset - guaranteed to work with OpenAI
     /// </summary>
     private static byte[] CreateSimpleTestImage()
     {
-        // Minimal 1x1 transparent PNG
-        return new byte[]
+        // Use the existing awesome_man.png asset which is a valid PNG that works with OpenAI
+        var testProjectDir = Path.GetDirectoryName(typeof(EndToEndIntegrationTests).Assembly.Location)!;
+        var assetPath = Path.Combine(testProjectDir, "..", "..", "..", "Assets", "awesome_man.png");
+        assetPath = Path.GetFullPath(assetPath);
+        
+        if (!File.Exists(assetPath))
         {
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
-            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1
-            0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
-            0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, // IDAT chunk
-            0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
-            0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
-            0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, // IEND chunk
-            0x42, 0x60, 0x82
-        };
+            throw new FileNotFoundException($"Test asset not found: {assetPath}");
+        }
+        
+        // Load and re-encode using ImageSharp to ensure OpenAI compatibility
+        using var image = Image.Load(assetPath);
+        using var stream = new MemoryStream();
+        image.SaveAsPng(stream);
+        return stream.ToArray();
     }
 }

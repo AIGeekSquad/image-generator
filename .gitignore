@@ -133,9 +133,6 @@ ipch/
 *.vspx
 *.sap
 
-# Visual Studio Trace Files
-*.e2e
-
 # TFS 2012 Local Workspace
 $tf/
 
@@ -425,3 +422,6 @@ nupkg/
 # Test Results and Coverage
 TestResults/
 packages/
+
+# Rider
+.idea/

@@ -16,7 +16,7 @@ namespace AiGeekSquad.ImageGenerator.Tool.Tools;
 /// MCP tools for image generation.
 /// These tools can be invoked by MCP clients to perform image generation operations.
 /// </summary>
-internal class ImageGenerationTools(
+public class ImageGenerationTools(
     IImageGenerationService imageService,
     ILogger<ImageGenerationTools> logger)
 {
@@ -33,6 +33,14 @@ internal class ImageGenerationTools(
     {
         try
         {
+            // Validate arguments first
+            var validationErrors = ValidateGenerateImageArgs(prompt, quality, style, size, numberOfImages);
+            if (validationErrors.Any())
+            {
+                var errorResponse = new { error = string.Join("; ", validationErrors) };
+                return JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions { WriteIndented = true });
+            }
+
             // Create a ChatMessage with the text prompt
             var messages = new List<ChatMessage>
             {
@@ -204,5 +212,51 @@ internal class ImageGenerationTools(
             logger.LogError(ex, "Error listing providers");
             return JsonSerializer.Serialize(new { error = ex.Message });
         }
+    }
+
+    private static List<string> ValidateGenerateImageArgs(string prompt, string? quality, string? style, string? size, int numberOfImages)
+    {
+        var errors = new List<string>();
+
+        // Validate prompt
+        if (string.IsNullOrWhiteSpace(prompt))
+            errors.Add("Prompt is required");
+
+        // Validate numberOfImages
+        if (numberOfImages < 1 || numberOfImages > 10)
+            errors.Add("NumberOfImages must be between 1 and 10");
+
+        // Validate quality
+        if (!string.IsNullOrEmpty(quality) && !IsValidQuality(quality))
+            errors.Add($"Quality must be 'standard' or 'hd', got '{quality}'");
+
+        // Validate style
+        if (!string.IsNullOrEmpty(style) && !IsValidStyle(style))
+            errors.Add($"Style must be 'vivid' or 'natural', got '{style}'");
+
+        // Validate size
+        if (!string.IsNullOrEmpty(size) && !IsValidSize(size))
+            errors.Add($"Size must be in format 'WIDTHxHEIGHT' (e.g., '1024x1024'), got '{size}'");
+
+        return errors;
+    }
+
+    private static bool IsValidQuality(string quality) =>
+        quality.Equals("standard", StringComparison.OrdinalIgnoreCase) ||
+        quality.Equals("hd", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsValidStyle(string style) =>
+        style.Equals("vivid", StringComparison.OrdinalIgnoreCase) ||
+        style.Equals("natural", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsValidSize(string size)
+    {
+        if (string.IsNullOrWhiteSpace(size))
+            return false;
+
+        var parts = size.Split('x', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 2 &&
+               int.TryParse(parts[0], out var width) && width > 0 &&
+               int.TryParse(parts[1], out var height) && height > 0;
     }
 }
