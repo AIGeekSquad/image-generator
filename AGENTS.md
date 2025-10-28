@@ -113,3 +113,25 @@ dotnet tool install -g --add-source ./artifacts AiGeekSquad.ImageGenerator
 - `ImageProviderBase` uses static `SharedHttpClient` if none provided
 - Providers should accept `HttpClient?` in constructor for testability
 - Named HttpClient registration: `"OpenAI"`, `"Google"` for provider-specific configuration
+
+## Solution Structure and Test Organization
+
+**Solution File Management:**
+- Solution file: `AiGeekSquad.ImageGenerator.slnx` (Visual Studio slnx format)
+- Use `dotnet sln add <project-path>` to add new projects to solution
+- Always verify `dotnet build` passes after adding new projects
+
+**Test Project Structure:**
+- `tests/AiGeekSquad.ImageGenerator.Tests.Integration/` - Integration tests (component interactions)
+- `tests/AiGeekSquad.ImageGenerator.Tests.Unit/` - Pure unit tests (mockable, no external dependencies)
+- `tests/AiGeekSquad.ImageGenerator.Tests.E2E/` - End-to-end tests (MCP server testing)
+
+**Package Reference Consistency:**
+- Use `ModelContextProtocol` (NOT `ModelContextProtocol.Server`) - the latter doesn't exist
+- All test projects use same versions: xunit.v3 3.1.0, FluentAssertions 7.2.0
+- E2E tests require additional packages: `ModelContextProtocol`, `Microsoft.Extensions.Hosting`, `Microsoft.Extensions.DependencyInjection`
+
+**Test Organization Rules:**
+- Unit tests: Fast, isolated, mockable - no real HTTP calls, no external dependencies
+- Integration tests: Test component interactions, may use TestHttpClient or test adapters
+- E2E tests: Full MCP server lifecycle, real tool execution, may require API keys (skipped if not available)

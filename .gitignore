@@ -425,3 +425,6 @@ nupkg/
 # Test Results and Coverage
 TestResults/
 packages/
+
+# Rider
+.idea/
