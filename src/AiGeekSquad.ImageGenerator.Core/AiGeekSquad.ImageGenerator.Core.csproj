@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>AiGeekSquad.ImageGenerator.Core</RootNamespace>
+    <AssemblyName>AiGeekSquad.ImageGenerator.Core</AssemblyName>
+    
+    <!-- NuGet Package Properties -->
+    <IsPackable>true</IsPackable>
+    <PackageId>AiGeekSquad.ImageGenerator.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>AIGeekSquad</Authors>
+    <Company>AIGeekSquad</Company>
+    <Description>Core library for AiGeekSquad Image Generator. Provides abstractions and base implementations for creating custom image generation providers. Use this package to extend the image generator with your own AI provider implementations.</Description>
+    <PackageProjectUrl>https://github.com/AIGeekSquad/image-generator</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AIGeekSquad/image-generator</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>ai;image-generation;extensibility;provider;abstractions;dall-e;openai;google;imagen</PackageTags>
+    <PackageReleaseNotes>Initial release of the core library with provider abstractions and built-in OpenAI and Google providers.</PackageReleaseNotes>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.AI" Version="9.10.1" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.10.1" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+    <PackageReference Include="Google.Cloud.AIPlatform.V1" Version="3.0.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

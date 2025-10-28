@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>AiGeekSquad.ImageGenerator.Tool</RootNamespace>
+    <AssemblyName>AiGeekSquad.ImageGenerator.Tool</AssemblyName>
+    
+    <!-- NuGet Package Properties -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>aigeeksquad-imagegen</ToolCommandName>
+    <PackageId>AiGeekSquad.ImageGenerator</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>AIGeekSquad</Authors>
+    <Company>AIGeekSquad</Company>
+    <Description>A .NET MCP (Model Context Protocol) tool for AI-powered image generation using various providers including OpenAI (DALL-E, GPT Image models) and Google (Imagen). Supports image generation, editing, and variations with an extensible provider architecture.</Description>
+    <PackageProjectUrl>https://github.com/AIGeekSquad/image-generator</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AIGeekSquad/image-generator</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>mcp;ai;image-generation;dall-e;openai;google;imagen;dotnet-tool</PackageTags>
+    <PackageReleaseNotes>Initial release with support for OpenAI (DALL-E 2, DALL-E 3, GPT Image 1) and Google (Imagen 3) providers.</PackageReleaseNotes>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../AiGeekSquad.ImageGenerator.Core/AiGeekSquad.ImageGenerator.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.AI" Version="9.10.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10" />
+    <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.1" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-rc.2.25502.107" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

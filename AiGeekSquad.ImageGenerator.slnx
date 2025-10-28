@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AiGeekSquad.ImageGenerator.Core/AiGeekSquad.ImageGenerator.Core.csproj" />
+    <Project Path="src/AiGeekSquad.ImageGenerator.Tool/AiGeekSquad.ImageGenerator.Tool.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AiGeekSquad.ImageGenerator.Tests/AiGeekSquad.ImageGenerator.Tests.csproj" />
+  </Folder>
+</Solution>
