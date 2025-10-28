@@ -228,12 +228,6 @@ dotnet build
 dotnet test
 ```
 
-### Package
-
-```bash
-dotnet pack src/AiGeekSquad.ImageGenerator.Tool/AiGeekSquad.ImageGenerator.Tool.csproj --configuration Release --output ./nupkg
-```
-
 ### Run Locally
 
 ```bash
@@ -246,44 +240,6 @@ dotnet run
 - .NET 9.0 SDK or later
 - OpenAI API key (for OpenAI provider)
 - Google Cloud project with Vertex AI enabled (for Google provider, optional)
-
-## CI/CD and Code Quality
-
-This project uses automated CI/CD with GitHub Actions for building, testing, and deploying to NuGet.org.
-
-### Build and Deploy Workflow
-
-The project automatically:
-- ✅ Builds on every push and PR
-- ✅ Runs all unit and integration tests
-- ✅ Analyzes code with SonarQube Cloud
-- ✅ Collects code coverage metrics
-- ✅ Publishes to NuGet.org on main branch pushes
-
-### SonarQube Integration
-
-Code quality and security are continuously monitored using [SonarCloud](https://sonarcloud.io/project/overview?id=AIGeekSquad_image-generator).
-
-To set up SonarQube integration:
-1. Create a project on [SonarCloud.io](https://sonarcloud.io)
-2. Add `SONAR_TOKEN` secret to your GitHub repository
-3. The workflow will automatically analyze code on each push/PR
-
-### Required Secrets
-
-Configure these secrets in your GitHub repository settings:
-- `SONAR_TOKEN` - SonarQube Cloud authentication token
-- `NUGET_API_KEY` - NuGet.org API key for publishing packages
-
-### Manual Publishing to NuGet.org
-
-```bash
-# Pack the tool
-dotnet pack src/AiGeekSquad.ImageGenerator.Tool/AiGeekSquad.ImageGenerator.Tool.csproj --configuration Release --output ./nupkg
-
-# Publish to NuGet.org (requires API key)
-dotnet nuget push ./nupkg/AiGeekSquad.ImageGenerator.1.0.0.nupkg --api-key YOUR_NUGET_API_KEY --source https://api.nuget.org/v3/index.json
-```
 
 ## License
 
