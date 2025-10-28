@@ -7,6 +7,8 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using AiGeekSquad.ImageGenerator.Core.Providers;
 using AiGeekSquad.ImageGenerator.Core.Models;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
 
@@ -268,14 +270,24 @@ public class EndToEndIntegrationTests
     }
 
     /// <summary>
-    /// Creates a minimal valid PNG image (64x64 pixel, white) - meets OpenAI minimum requirements
+    /// Creates a test image using the existing PNG asset - guaranteed to work with OpenAI
     /// </summary>
     private static byte[] CreateSimpleTestImage()
     {
-        // Hardcoded 64x64 white PNG image that meets OpenAI's minimum size requirement
-        // This is a valid PNG file created with minimal white content
-        return Convert.FromBase64String(
-            "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAAmSURBVHic7cEBAQAAAIKg/q/uBn+gAAAAAAAAAAAAAAAAAAAAAAAAYAOkAAGSvKGJAAAAAElFTkSuQmCC"
-        );
+        // Use the existing awesome_man.png asset which is a valid PNG that works with OpenAI
+        var testProjectDir = Path.GetDirectoryName(typeof(EndToEndIntegrationTests).Assembly.Location)!;
+        var assetPath = Path.Combine(testProjectDir, "..", "..", "..", "Assets", "awesome_man.png");
+        assetPath = Path.GetFullPath(assetPath);
+        
+        if (!File.Exists(assetPath))
+        {
+            throw new FileNotFoundException($"Test asset not found: {assetPath}");
+        }
+        
+        // Load and re-encode using ImageSharp to ensure OpenAI compatibility
+        using var image = Image.Load(assetPath);
+        using var stream = new MemoryStream();
+        image.SaveAsPng(stream);
+        return stream.ToArray();
     }
 }
