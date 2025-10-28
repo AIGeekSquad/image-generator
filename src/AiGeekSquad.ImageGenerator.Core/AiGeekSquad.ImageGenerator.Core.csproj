@@ -30,8 +30,8 @@
     <PackageReference Include="Microsoft.Extensions.AI" Version="9.10.1" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.10.1" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
-    <PackageReference Include="Google.Cloud.AIPlatform.V1" Version="3.0.0" />
-    <PackageReference Include="System.Text.Json" Version="9.0.1" />
+    <PackageReference Include="Google.Cloud.AIPlatform.V1" Version="3.54.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10" />
