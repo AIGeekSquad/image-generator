@@ -143,15 +143,26 @@ public class ConversationalImageGenerationTests
         };
 
         // Should call GenerateImageAsync with converted prompt
-        mockProvider.Setup(p => p.GenerateImageFromConversationAsync(request, default))
+        mockProvider.Setup(p => p.GenerateImageFromConversationAsync(request, It.IsAny<CancellationToken>()))
             .Returns<ConversationalImageGenerationRequest, CancellationToken>((req, ct) =>
             {
-                // Simulate fallback behavior
+                // Simulate fallback behavior by returning the same result and triggering GenerateImageAsync
                 var text = req.Conversation.FirstOrDefault()?.Text ?? "";
-                return mockProvider.Object.GenerateImageAsync(new CoreImageRequest
+                var fallbackRequest = new CoreImageRequest
                 {
                     Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, text) }
-                }, ct);
+                };
+                
+                // Simulate the fallback call
+                mockProvider.Object.GenerateImageAsync(fallbackRequest, ct);
+                
+                // Return the expected result
+                return Task.FromResult(new CoreImageResponse
+                {
+                    Images = new List<GeneratedImage>(),
+                    Model = "test-model",
+                    Provider = "TestProvider"
+                });
             });
 
         var result = await mockProvider.Object.GenerateImageFromConversationAsync(request, TestContext.Current.CancellationToken);

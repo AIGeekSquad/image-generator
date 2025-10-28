@@ -213,7 +213,7 @@ public class EndToEndIntegrationTests
             {
                 new(ChatRole.User, new AIContent[]
                 {
-                    new TextContent("Create an image in a similar style to this reference"),
+                    new TextContent("Create a simple landscape image"),
                     new DataContent(referenceImage, "image/png")
                 })
             },
@@ -268,22 +268,14 @@ public class EndToEndIntegrationTests
     }
 
     /// <summary>
-    /// Creates a minimal valid PNG image (1x1 pixel, transparent)
+    /// Creates a minimal valid PNG image (64x64 pixel, white) - meets OpenAI minimum requirements
     /// </summary>
     private static byte[] CreateSimpleTestImage()
     {
-        // Minimal 1x1 transparent PNG
-        return new byte[]
-        {
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
-            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1
-            0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
-            0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, // IDAT chunk
-            0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
-            0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
-            0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, // IEND chunk
-            0x42, 0x60, 0x82
-        };
+        // Hardcoded 64x64 white PNG image that meets OpenAI's minimum size requirement
+        // This is a valid PNG file created with minimal white content
+        return Convert.FromBase64String(
+            "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAAmSURBVHic7cEBAQAAAIKg/q/uBn+gAAAAAAAAAAAAAAAAAAAAAAAAYAOkAAGSvKGJAAAAAElFTkSuQmCC"
+        );
     }
 }
