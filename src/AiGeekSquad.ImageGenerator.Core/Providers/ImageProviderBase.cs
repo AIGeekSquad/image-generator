@@ -177,23 +177,11 @@ public abstract class ImageProviderBase : IImageGenerationProvider
     /// </summary>
     protected static List<Microsoft.Extensions.AI.DataContent> ExtractImagesFromMessages(IList<ChatMessage> messages)
     {
-        var images = new List<Microsoft.Extensions.AI.DataContent>();
-        
-        foreach (var message in messages)
-        {
-            if (message.Contents != null)
-            {
-                foreach (var content in message.Contents)
-                {
-                    if (content is Microsoft.Extensions.AI.DataContent dataContent)
-                    {
-                        images.Add(dataContent);
-                    }
-                }
-            }
-        }
-        
-        return images;
+        return messages
+            .Where(m => m.Contents != null)
+            .SelectMany(m => m.Contents!)
+            .OfType<Microsoft.Extensions.AI.DataContent>()
+            .ToList();
     }
 
     /// <summary>
