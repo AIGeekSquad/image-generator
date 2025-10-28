@@ -142,36 +142,8 @@ public class OpenAIImageProvider : ImageProviderBase
 
         var result = await _adapter.GenerateImageAsync(model, prompt, options, cancellationToken);
 
-        // Check model type first - GPT Image models return Base64, DALL-E models return URLs
-        if (model.StartsWith("gpt-image", StringComparison.OrdinalIgnoreCase) && result.ImageBytes != null)
-        {
-            // GPT Image models - use Base64 data directly
-            var base64Data = Convert.ToBase64String(result.ImageBytes.ToArray());
-            return new CoreImageResponse
-            {
-                Images = new List<Models.GeneratedImage>
-                {
-                    new()
-                    {
-                        Base64Data = base64Data,
-                        Url = null,
-                        RevisedPrompt = result.RevisedPrompt
-                    }
-                },
-                Model = model,
-                Provider = "OpenAI"
-            };
-        }
-        else
-        {
-            // DALL-E models or fallback - download from URL
-            return await BuildSingleImageResponseFromUrlAsync(
-                result.ImageUri?.ToString(),
-                model,
-                result.RevisedPrompt,
-                null,
-                cancellationToken);
-        }
+        // Handle response based on model type
+        return await BuildImageResponseAsync(result, model, cancellationToken);
     }
 
     /// <summary>
@@ -210,36 +182,8 @@ public class OpenAIImageProvider : ImageProviderBase
             options,
             cancellationToken);
 
-        // Check model type first - GPT Image models return Base64, DALL-E models return URLs
-        if (model.StartsWith("gpt-image", StringComparison.OrdinalIgnoreCase) && result.ImageBytes != null)
-        {
-            // GPT Image models - use Base64 data directly
-            var base64Data = Convert.ToBase64String(result.ImageBytes.ToArray());
-            return new CoreImageResponse
-            {
-                Images = new List<Models.GeneratedImage>
-                {
-                    new()
-                    {
-                        Base64Data = base64Data,
-                        Url = null,
-                        RevisedPrompt = result.RevisedPrompt
-                    }
-                },
-                Model = model,
-                Provider = "OpenAI"
-            };
-        }
-        else
-        {
-            // DALL-E models or fallback - download from URL
-            return await BuildSingleImageResponseFromUrlAsync(
-                result.ImageUri?.ToString(),
-                model,
-                result.RevisedPrompt,
-                null,
-                cancellationToken);
-        }
+        // Handle response based on model type
+        return await BuildImageResponseAsync(result, model, cancellationToken);
     }
 
     /// <summary>
@@ -278,6 +222,51 @@ public class OpenAIImageProvider : ImageProviderBase
 
         return await BuildSingleImageResponseFromUrlAsync(result.ImageUri?.ToString(), model, null, null, cancellationToken);
     }
+    /// <summary>
+    /// Builds a CoreImageResponse from an OpenAI result, handling both GPT image models (Base64) and DALL-E models (URLs)
+    /// </summary>
+    /// <param name="result">The OpenAI GeneratedImage result</param>
+    /// <param name="model">The model name used for generation</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A properly formatted CoreImageResponse</returns>
+    private async Task<CoreImageResponse> BuildImageResponseAsync(
+        OpenAI.Images.GeneratedImage result,
+        string model,
+        CancellationToken cancellationToken)
+    {
+        // Check model type first - GPT Image models return Base64, DALL-E models return URLs
+        if (model.StartsWith("gpt-image", StringComparison.OrdinalIgnoreCase) && result.ImageBytes != null)
+        {
+            // GPT Image models - use Base64 data directly
+            var imageBytes = result.ImageBytes.ToArray();
+            var base64Data = Convert.ToBase64String((byte[])imageBytes);
+            return new CoreImageResponse
+            {
+                Images = new List<Models.GeneratedImage>
+                {
+                    new()
+                    {
+                        Base64Data = base64Data,
+                        Url = null,
+                        RevisedPrompt = result.RevisedPrompt
+                    }
+                },
+                Model = model,
+                Provider = "OpenAI"
+            };
+        }
+        else
+        {
+            // DALL-E models or fallback - download from URL
+            return await BuildSingleImageResponseFromUrlAsync(
+                result.ImageUri?.ToString(),
+                model,
+                result.RevisedPrompt,
+                null,
+                cancellationToken);
+        }
+    }
+
 
     private static GeneratedImageSize? ParseSize(string? size)
     {
