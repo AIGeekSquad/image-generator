@@ -238,7 +238,7 @@ public class OpenAIImageProvider : ImageProviderBase
         {
             // GPT Image models - use Base64 data directly
             var imageBytes = result.ImageBytes.ToArray();
-            var base64Data = Convert.ToBase64String((byte[])imageBytes);
+            var base64Data = Convert.ToBase64String(imageBytes);
             return new CoreImageResponse
             {
                 Images = new List<Models.GeneratedImage>

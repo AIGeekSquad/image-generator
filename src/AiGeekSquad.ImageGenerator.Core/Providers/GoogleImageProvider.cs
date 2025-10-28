@@ -108,7 +108,7 @@ public class GoogleImageProvider : ImageProviderBase
             });
     }
 
-    private PredictRequest BuildPredictRequest(string endpoint, string prompt, CoreImageRequest request)
+    private static PredictRequest BuildPredictRequest(string endpoint, string prompt, CoreImageRequest request)
     {
         var parameters = new Dictionary<string, object>
         {
