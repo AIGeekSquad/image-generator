@@ -114,11 +114,26 @@ public class OpenAIImageProvider : ImageProviderBase
 
         var options = new OpenAI.Images.ImageGenerationOptions
         {
-            Size = ParseSize(request.Size),
-            Quality = ParseQuality(request.Quality),
-            Style = ParseStyle(request.Style),
             ResponseFormat = GeneratedImageFormat.Uri
         };
+
+        var size = ParseSize(request.Size);
+        if (size.HasValue)
+        {
+            options.Size = size.Value;
+        }
+
+        var quality = ParseQuality(request.Quality);
+        if (quality.HasValue)
+        {
+            options.Quality = quality.Value;
+        }
+
+        var style = ParseStyle(request.Style);
+        if (style.HasValue)
+        {
+            options.Style = style.Value;
+        }
 
         var result = await _adapter.GenerateImageAsync(model, prompt, options, cancellationToken);
 
@@ -142,16 +157,23 @@ public class OpenAIImageProvider : ImageProviderBase
         var prompt = ExtractTextFromMessages(request.Messages);
         var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
 
+        var options = new ImageEditOptions
+        {
+            ResponseFormat = GeneratedImageFormat.Uri
+        };
+
+        var size = ParseSize(request.Size);
+        if (size.HasValue)
+        {
+            options.Size = size.Value;
+        }
+
         var result = await _adapter.GenerateImageEditAsync(
             model,
             imageStream,
             "image.png",
             prompt,
-            new ImageEditOptions
-            {
-                Size = ParseSize(request.Size),
-                ResponseFormat = GeneratedImageFormat.Uri
-            },
+            options,
             cancellationToken);
 
         return BuildSingleImageResponse(
@@ -173,15 +195,22 @@ public class OpenAIImageProvider : ImageProviderBase
         var model = request.Model ?? ImageModels.OpenAI.DallE2;
         var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
 
+        var options = new ImageVariationOptions
+        {
+            ResponseFormat = GeneratedImageFormat.Uri
+        };
+
+        var size = ParseSize(request.Size);
+        if (size.HasValue)
+        {
+            options.Size = size.Value;
+        }
+
         var result = await _adapter.GenerateImageVariationAsync(
             model,
             imageStream,
             "image.png",
-            new ImageVariationOptions
-            {
-                Size = ParseSize(request.Size),
-                ResponseFormat = GeneratedImageFormat.Uri
-            },
+            options,
             cancellationToken);
 
         return BuildSingleImageResponse(result.ImageUri?.ToString(), model);
@@ -189,34 +218,34 @@ public class OpenAIImageProvider : ImageProviderBase
 
     private static GeneratedImageSize? ParseSize(string? size)
     {
-        return size switch
-        {
-            ImageModels.Sizes.Square256 => GeneratedImageSize.W256xH256,
-            ImageModels.Sizes.Square512 => GeneratedImageSize.W512xH512,
-            ImageModels.Sizes.Square1024 => GeneratedImageSize.W1024xH1024,
-            ImageModels.Sizes.Wide1792x1024 => GeneratedImageSize.W1792xH1024,
-            ImageModels.Sizes.Tall1024x1792 => GeneratedImageSize.W1024xH1792,
-            _ => null
-        };
+        if (size == null) return null;
+        
+        if (size == ImageModels.Sizes.Square256) return GeneratedImageSize.W256xH256;
+        if (size == ImageModels.Sizes.Square512) return GeneratedImageSize.W512xH512;
+        if (size == ImageModels.Sizes.Square1024) return GeneratedImageSize.W1024xH1024;
+        if (size == ImageModels.Sizes.Wide1792x1024) return GeneratedImageSize.W1792xH1024;
+        if (size == ImageModels.Sizes.Tall1024x1792) return GeneratedImageSize.W1024xH1792;
+        
+        return null;
     }
 
     private static GeneratedImageQuality? ParseQuality(string? quality)
     {
-        return quality switch
-        {
-            ImageModels.Quality.Standard => GeneratedImageQuality.Standard,
-            ImageModels.Quality.HD => GeneratedImageQuality.High,
-            _ => null
-        };
+        if (quality == null) return null;
+        
+        if (quality == ImageModels.Quality.Standard) return GeneratedImageQuality.Standard;
+        if (quality == ImageModels.Quality.HD) return GeneratedImageQuality.High;
+        
+        return null;
     }
 
     private static GeneratedImageStyle? ParseStyle(string? style)
     {
-        return style switch
-        {
-            ImageModels.Style.Vivid => GeneratedImageStyle.Vivid,
-            ImageModels.Style.Natural => GeneratedImageStyle.Natural,
-            _ => null
-        };
+        if (style == null) return null;
+        
+        if (style == ImageModels.Style.Vivid) return GeneratedImageStyle.Vivid;
+        if (style == ImageModels.Style.Natural) return GeneratedImageStyle.Natural;
+        
+        return null;
     }
 }
