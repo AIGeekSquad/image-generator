@@ -8,7 +8,6 @@ using FluentAssertions.Execution;
 using AiGeekSquad.ImageGenerator.Core.Providers;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
 
 namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
 
@@ -56,10 +55,9 @@ public class EndToEndIntegrationTests
     }
 
     [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
-    public async Task E2E_OpenAI_GenerateImage_WithDallE2()
+    public async Task E2E_OpenAI_GenerateImage_WithGPTImage1Mini()
     {
         // Arrange
-
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         var request = new CoreImageRequest
         {
@@ -67,8 +65,8 @@ public class EndToEndIntegrationTests
             {
                 new(ChatRole.User, "A cute cat playing with a ball of yarn")
             },
-            Model = ImageModels.OpenAI.DallE2,
-            Size = "512x512"
+            Model = ImageModels.OpenAI.GPTImage1Mini,
+            Size = "1024x1024"
         };
 
         // Act
@@ -79,6 +77,8 @@ public class EndToEndIntegrationTests
         response.Should().NotBeNull();
         response.Images.Should().NotBeEmpty();
         response.Images[0].Url.Should().NotBeNullOrEmpty();
+        response.Model.Should().Be(ImageModels.OpenAI.GPTImage1Mini);
+        response.Provider.Should().Be("OpenAI");
     }
 
     [Fact(Skip = "Requires GOOGLE_PROJECT_ID environment variable", SkipUnless = nameof(HasGoogleProjectId))]
@@ -112,13 +112,12 @@ public class EndToEndIntegrationTests
     }
 
     [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
-    public async Task E2E_OpenAI_EditImage_WithDallE2()
+    public async Task E2E_OpenAI_EditImage_WithGPTImage1()
     {
         // Arrange
-
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         
-        // Create a simple test image (1x1 PNG with transparency) and convert to base64
+        // Use the awesome_man.png asset for editing
         byte[] testImageBytes = CreateSimpleTestImage();
         string testImageBase64 = Convert.ToBase64String(testImageBytes);
         
@@ -129,8 +128,8 @@ public class EndToEndIntegrationTests
                 new(ChatRole.User, "Add a red circle in the center")
             },
             Image = testImageBase64,
-            Model = ImageModels.OpenAI.DallE2,
-            Size = "512x512"
+            Model = ImageModels.OpenAI.GPTImage1,
+            Size = "1024x1024"
         };
 
         // Act
@@ -141,25 +140,26 @@ public class EndToEndIntegrationTests
         response.Should().NotBeNull();
         response.Images.Should().NotBeEmpty();
         response.Images[0].Url.Should().NotBeNullOrEmpty();
+        response.Model.Should().Be(ImageModels.OpenAI.GPTImage1);
+        response.Provider.Should().Be("OpenAI");
     }
 
     [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
-    public async Task E2E_OpenAI_CreateVariation_WithDallE2()
+    public async Task E2E_OpenAI_CreateVariation_WithGPTImage1()
     {
         // Arrange
-
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         
-        // Create a simple test image and convert to base64
+        // Use the awesome_man.png asset for variations
         byte[] testImageBytes = CreateSimpleTestImage();
         string testImageBase64 = Convert.ToBase64String(testImageBytes);
         
         var variationRequest = new CoreImageVariationRequest
         {
             Image = testImageBase64,
-            Model = ImageModels.OpenAI.DallE2,
+            Model = ImageModels.OpenAI.GPTImage1,
             NumberOfImages = 2,
-            Size = "512x512"
+            Size = "1024x1024"
         };
 
         // Act
@@ -170,6 +170,8 @@ public class EndToEndIntegrationTests
         response.Should().NotBeNull();
         response.Images.Should().HaveCount(2);
         response.Images.Should().OnlyContain(img => !string.IsNullOrEmpty(img.Url));
+        response.Model.Should().Be(ImageModels.OpenAI.GPTImage1);
+        response.Provider.Should().Be("OpenAI");
     }
 
     [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]

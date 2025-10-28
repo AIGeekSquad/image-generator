@@ -26,10 +26,9 @@ public static class ImageModels
         public const string GPTImage1 = "gpt-image-1";
 
         /// <summary>
-        /// GPT-5 Image Generation - Next generation model (if available)
-        /// Note: This is a placeholder for future GPT-5 image capabilities
+        /// GPT Image 1 Mini - Faster, smaller variant of GPT Image 1
         /// </summary>
-        public const string GPT5Image = "gpt-5-image";
+        public const string GPTImage1Mini = "gpt-image-1-mini";
 
         /// <summary>
         /// Default model

@@ -3,9 +3,6 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
-using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
-using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
-using CoreConversationalRequest = AiGeekSquad.ImageGenerator.Core.Models.ConversationalImageGenerationRequest;
 using AiGeekSquad.ImageGenerator.Core.Models;
 
 namespace AiGeekSquad.ImageGenerator.Tests.AcceptanceCriteria;
@@ -23,7 +20,7 @@ public class MultiProviderSupportTests
         ImageModels.OpenAI.DallE2.Should().NotBeEmpty();
         ImageModels.OpenAI.DallE3.Should().NotBeEmpty();
         ImageModels.OpenAI.GPTImage1.Should().NotBeEmpty();
-        ImageModels.OpenAI.GPT5Image.Should().NotBeEmpty();
+        ImageModels.OpenAI.GPTImage1Mini.Should().NotBeEmpty();
     }
 
     [Fact]

@@ -1,6 +1,5 @@
 using AiGeekSquad.ImageGenerator.Core.Adapters;
 using Google.Cloud.AIPlatform.V1;
-using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using ProtobufValue = Google.Protobuf.WellKnownTypes.Value;
 

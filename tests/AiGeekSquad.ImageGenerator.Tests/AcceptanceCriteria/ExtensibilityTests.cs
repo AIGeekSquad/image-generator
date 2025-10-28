@@ -1,6 +1,5 @@
 using Microsoft.Extensions.AI;
 using FluentAssertions;
-using FluentAssertions.Execution;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using AiGeekSquad.ImageGenerator.Core.Services;

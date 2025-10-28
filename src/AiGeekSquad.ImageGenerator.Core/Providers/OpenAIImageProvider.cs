@@ -1,7 +1,6 @@
 using Azure.AI.OpenAI;
 using OpenAI;
 using OpenAI.Images;
-using Microsoft.Extensions.AI;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
@@ -61,7 +60,7 @@ public class OpenAIImageProvider : ImageProviderBase
                 ImageModels.OpenAI.DallE3,
                 ImageModels.OpenAI.DallE2,
                 ImageModels.OpenAI.GPTImage1,
-                ImageModels.OpenAI.GPT5Image
+                ImageModels.OpenAI.GPTImage1Mini
             },
             SupportedOperations = new List<ImageOperation>
             {
@@ -112,10 +111,13 @@ public class OpenAIImageProvider : ImageProviderBase
         var model = GetModelOrDefault(request.Model);
         var prompt = ExtractTextFromMessages(request.Messages);
 
-        var options = new OpenAI.Images.ImageGenerationOptions
+        var options = new OpenAI.Images.ImageGenerationOptions();
+        
+        // Only set ResponseFormat for DALL-E models - gpt-image-1 always returns base64 and doesn't support this parameter
+        if (model.StartsWith("dall-e-", StringComparison.OrdinalIgnoreCase))
         {
-            ResponseFormat = GeneratedImageFormat.Uri
-        };
+            options.ResponseFormat = GeneratedImageFormat.Uri;
+        }
 
         var size = ParseSize(request.Size);
         if (size.HasValue)

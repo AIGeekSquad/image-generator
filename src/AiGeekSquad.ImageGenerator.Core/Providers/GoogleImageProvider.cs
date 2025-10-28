@@ -1,6 +1,5 @@
 using Google.Cloud.AIPlatform.V1;
 using System.Text.Json;
-using Microsoft.Extensions.AI;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using GeneratedImageModel = AiGeekSquad.ImageGenerator.Core.Models.GeneratedImage;

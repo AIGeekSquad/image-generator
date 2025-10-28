@@ -1,10 +1,5 @@
 using Microsoft.Extensions.AI;
 using FluentAssertions;
-using FluentAssertions.Execution;
-using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
-using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
-using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
-using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
 using AiGeekSquad.ImageGenerator.Core.Abstractions;
 using AiGeekSquad.ImageGenerator.Core.Models;
 using Moq;
