@@ -49,7 +49,6 @@ public class ImageGenerationServiceTests
         var result = service.GetProvider("TestProvider");
 
         // Assert
-        using var scope = new AssertionScope();
         result.Should().NotBeNull();
         result!.ProviderName.Should().Be("TestProvider");
     }
