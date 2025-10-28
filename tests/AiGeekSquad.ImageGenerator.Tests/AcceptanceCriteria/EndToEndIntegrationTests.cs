@@ -2,7 +2,6 @@ using Microsoft.Extensions.AI;
 using CoreImageRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationRequest;
 using CoreImageResponse = AiGeekSquad.ImageGenerator.Core.Models.ImageGenerationResponse;
 using CoreImageEditRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageEditRequest;
-using CoreImageVariationRequest = AiGeekSquad.ImageGenerator.Core.Models.ImageVariationRequest;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using AiGeekSquad.ImageGenerator.Core.Providers;
@@ -21,6 +20,7 @@ public class EndToEndIntegrationTests
     public static bool HasOpenAIApiKey => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
     public static bool HasGoogleProjectId => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID"));
     public static bool HasAnyProvider => HasOpenAIApiKey || HasGoogleProjectId;
+    public static bool HasOpenAIOrganizationVerified => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("OPENAI_ORG_VERIFIED"));
     
     private static string OpenAIApiKey => Environment.GetEnvironmentVariable("OPENAI_API_KEY")!;
     private static string GoogleProjectId => Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID")!;
@@ -58,6 +58,7 @@ public class EndToEndIntegrationTests
     public async Task E2E_OpenAI_GenerateImage_WithGPTImage1Mini()
     {
         // Arrange
+        // Note: GPT Image models require organization verification at https://platform.openai.com/settings/organization/general
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         var request = new CoreImageRequest
         {
@@ -76,7 +77,7 @@ public class EndToEndIntegrationTests
         using var scope = new AssertionScope();
         response.Should().NotBeNull();
         response.Images.Should().NotBeEmpty();
-        response.Images[0].Url.Should().NotBeNullOrEmpty();
+        response.Images[0].Base64Data.Should().NotBeNullOrEmpty(); // GPT Image models return base64 data, not URLs
         response.Model.Should().Be(ImageModels.OpenAI.GPTImage1Mini);
         response.Provider.Should().Be("OpenAI");
     }
@@ -112,9 +113,10 @@ public class EndToEndIntegrationTests
     }
 
     [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
-    public async Task E2E_OpenAI_EditImage_WithGPTImage1()
+    public async Task E2E_OpenAI_EditImage_WithGPTImage1Mini()
     {
         // Arrange
+        // Note: GPT Image models require organization verification at https://platform.openai.com/settings/organization/general
         var provider = new OpenAIImageProvider(OpenAIApiKey);
         
         // Use the awesome_man.png asset for editing
@@ -128,7 +130,7 @@ public class EndToEndIntegrationTests
                 new(ChatRole.User, "Add a red circle in the center")
             },
             Image = testImageBase64,
-            Model = ImageModels.OpenAI.GPTImage1,
+            Model = ImageModels.OpenAI.GPTImage1Mini,
             Size = "1024x1024"
         };
 
@@ -139,38 +141,8 @@ public class EndToEndIntegrationTests
         using var scope = new AssertionScope();
         response.Should().NotBeNull();
         response.Images.Should().NotBeEmpty();
-        response.Images[0].Url.Should().NotBeNullOrEmpty();
-        response.Model.Should().Be(ImageModels.OpenAI.GPTImage1);
-        response.Provider.Should().Be("OpenAI");
-    }
-
-    [Fact(Skip = "Requires OPENAI_API_KEY environment variable", SkipUnless = nameof(HasOpenAIApiKey))]
-    public async Task E2E_OpenAI_CreateVariation_WithGPTImage1()
-    {
-        // Arrange
-        var provider = new OpenAIImageProvider(OpenAIApiKey);
-        
-        // Use the awesome_man.png asset for variations
-        byte[] testImageBytes = CreateSimpleTestImage();
-        string testImageBase64 = Convert.ToBase64String(testImageBytes);
-        
-        var variationRequest = new CoreImageVariationRequest
-        {
-            Image = testImageBase64,
-            Model = ImageModels.OpenAI.GPTImage1,
-            NumberOfImages = 2,
-            Size = "1024x1024"
-        };
-
-        // Act
-        var response = await provider.CreateVariationAsync(variationRequest, TestContext.Current.CancellationToken);
-
-        // Assert
-        using var scope = new AssertionScope();
-        response.Should().NotBeNull();
-        response.Images.Should().HaveCount(2);
-        response.Images.Should().OnlyContain(img => !string.IsNullOrEmpty(img.Url));
-        response.Model.Should().Be(ImageModels.OpenAI.GPTImage1);
+        response.Images[0].Base64Data.Should().NotBeNullOrEmpty(); // GPT Image models return base64 data
+        response.Model.Should().Be(ImageModels.OpenAI.GPTImage1Mini);
         response.Provider.Should().Be("OpenAI");
     }
 

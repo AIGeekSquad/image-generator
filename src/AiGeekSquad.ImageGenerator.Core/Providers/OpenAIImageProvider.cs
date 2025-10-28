@@ -159,10 +159,13 @@ public class OpenAIImageProvider : ImageProviderBase
         var prompt = ExtractTextFromMessages(request.Messages);
         var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
 
-        var options = new ImageEditOptions
+        var options = new ImageEditOptions();
+        
+        // Only set ResponseFormat for DALL-E models - gpt-image-1 always returns base64 and doesn't support this parameter
+        if (model.StartsWith("dall-e-", StringComparison.OrdinalIgnoreCase))
         {
-            ResponseFormat = GeneratedImageFormat.Uri
-        };
+            options.ResponseFormat = GeneratedImageFormat.Uri;
+        }
 
         var size = ParseSize(request.Size);
         if (size.HasValue)
@@ -197,10 +200,13 @@ public class OpenAIImageProvider : ImageProviderBase
         var model = request.Model ?? ImageModels.OpenAI.DallE2;
         var imageStream = await ConvertToStreamAsync(request.Image, cancellationToken);
 
-        var options = new ImageVariationOptions
+        var options = new ImageVariationOptions();
+        
+        // Only set ResponseFormat for DALL-E models - gpt-image-1 always returns base64 and doesn't support this parameter
+        if (model.StartsWith("dall-e-", StringComparison.OrdinalIgnoreCase))
         {
-            ResponseFormat = GeneratedImageFormat.Uri
-        };
+            options.ResponseFormat = GeneratedImageFormat.Uri;
+        }
 
         var size = ParseSize(request.Size);
         if (size.HasValue)
