@@ -65,7 +65,7 @@ public class ImageEditingTests
     }
 
     [Fact]
-    public async Task AC4_Provider_IndicatesEditSupport()
+    public void AC4_Provider_IndicatesEditSupport()
     {
         // Acceptance Criteria: Providers should indicate whether they support edit and variation operations
         var provider = new Mock<IImageGenerationProvider>();

@@ -44,7 +44,26 @@ builder.Services.AddSingleton<IImageGenerationProvider>(sp => /* factory */);
 **Uses Preview/Alpha Packages:**
 - `xunit.v3` version `1.0.0` (v3, not stable v2)
 - `FluentAssertions` version `7.0.0-alpha.4` (alpha version)
-- Use `AssertionScope` pattern for multiple assertions in single test
+
+**FluentAssertions AssertionScope Pattern:**
+- **Use AssertionScope ONLY for multiple assertions (3+ recommended)** - groups related assertions and reports all failures together
+- **DO NOT use AssertionScope for single assertions** - adds unnecessary overhead and reduces readability
+- **Correct usage example:**
+```csharp
+// Assert - Multiple related assertions
+using var scope = new AssertionScope();
+response.Should().NotBeNull();
+response.Images.Should().NotBeEmpty();
+response.Images[0].Url.Should().NotBeNullOrEmpty();
+response.Model.Should().Be("expected-model");
+response.Provider.Should().Be("ExpectedProvider");
+```
+- **Incorrect usage example:**
+```csharp
+// Assert - Single assertion (AssertionScope not needed)
+using var scope = new AssertionScope();
+provider.Should().NotBeNull(); // Just use: provider.Should().NotBeNull();
+```
 
 **xUnit v3 Specific Patterns:**
 - **CancellationToken Usage (xUnit1051)**: Tests calling methods that accept `CancellationToken` MUST use `TestContext.Current.CancellationToken` instead of `CancellationToken.None` for responsive test cancellation. See: https://xunit.net/xunit.analyzers/rules/xUnit1051

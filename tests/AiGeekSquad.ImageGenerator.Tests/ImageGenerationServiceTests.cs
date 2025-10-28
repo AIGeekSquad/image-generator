@@ -94,7 +94,7 @@ public class ImageGenerationServiceTests
         };
 
         // Act
-        var result = await service.GenerateImageAsync("TestProvider", request);
+        var result = await service.GenerateImageAsync("TestProvider", request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -162,7 +162,7 @@ public class ImageGenerationServiceTests
         };
 
         // Act
-        var result = await service.EditImageAsync("TestProvider", request);
+        var result = await service.EditImageAsync("TestProvider", request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -232,7 +232,7 @@ public class ImageGenerationServiceTests
         };
 
         // Act
-        var result = await service.CreateVariationAsync("TestProvider", request);
+        var result = await service.CreateVariationAsync("TestProvider", request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -303,7 +303,7 @@ public class ImageGenerationServiceTests
         };
 
         // Act
-        var result = await service.GenerateImageFromConversationAsync("TestProvider", request);
+        var result = await service.GenerateImageFromConversationAsync("TestProvider", request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();

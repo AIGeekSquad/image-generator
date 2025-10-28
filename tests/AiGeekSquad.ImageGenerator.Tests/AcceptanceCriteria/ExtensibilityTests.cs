@@ -100,7 +100,7 @@ public class ExtensibilityTests
         var service = new ImageGenerationService(new[] { provider1.Object, provider2.Object });
 
         var request = new CoreImageRequest { Messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, "test") } };
-        var result = await service.GenerateImageAsync("Provider1", request);
+        var result = await service.GenerateImageAsync("Provider1", request, TestContext.Current.CancellationToken);
 
         result.Provider.Should().Be("Provider1");
         provider1.Verify(p => p.GenerateImageAsync(request, It.IsAny<CancellationToken>()), Times.Once);

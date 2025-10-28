@@ -154,7 +154,7 @@ public class ConversationalImageGenerationTests
                 }, ct);
             });
 
-        var result = await mockProvider.Object.GenerateImageFromConversationAsync(request);
+        var result = await mockProvider.Object.GenerateImageFromConversationAsync(request, TestContext.Current.CancellationToken);
 
         result.Should().NotBeNull();
         mockProvider.Verify(p => p.GenerateImageAsync(It.IsAny<CoreImageRequest>(), It.IsAny<CancellationToken>()), Times.Once);

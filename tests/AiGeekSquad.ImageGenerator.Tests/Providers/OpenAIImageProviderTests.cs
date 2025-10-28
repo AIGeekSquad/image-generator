@@ -22,7 +22,6 @@ public class OpenAIImageProviderTests
         var provider = new OpenAIImageProvider("test-api-key");
 
         // Assert
-        using var scope = new AssertionScope();
         provider.Should().NotBeNull();
         provider.ProviderName.Should().Be("OpenAI");
     }
@@ -37,7 +36,6 @@ public class OpenAIImageProviderTests
         var provider = new OpenAIImageProvider(adapter);
 
         // Assert
-        using var scope = new AssertionScope();
         provider.Should().NotBeNull();
         provider.ProviderName.Should().Be("OpenAI");
     }
@@ -52,7 +50,6 @@ public class OpenAIImageProviderTests
             "test-deployment");
 
         // Assert
-        using var scope = new AssertionScope();
         provider.Should().NotBeNull();
         provider.ProviderName.Should().Be("OpenAI");
     }

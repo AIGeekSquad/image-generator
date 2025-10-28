@@ -42,7 +42,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -70,7 +70,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -96,7 +96,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -132,7 +132,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.EditImageAsync(editRequest, CancellationToken.None);
+        var response = await provider.EditImageAsync(editRequest, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -161,7 +161,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.CreateVariationAsync(variationRequest, CancellationToken.None);
+        var response = await provider.CreateVariationAsync(variationRequest, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -189,7 +189,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         using var scope = new AssertionScope();
@@ -222,7 +222,7 @@ public class EndToEndIntegrationTests
         };
 
         // Act
-        var response = await provider.GenerateImageAsync(request, CancellationToken.None);
+        var response = await provider.GenerateImageAsync(request, TestContext.Current.CancellationToken);
 
         // Assert - Provider extracts text even if it doesn't support multi-modal
         using var scope = new AssertionScope();
@@ -247,7 +247,7 @@ public class EndToEndIntegrationTests
                 Messages = new List<ChatMessage> { new(ChatRole.User, prompt) },
                 Model = ImageModels.OpenAI.DallE3
             };
-            results.Add(await openAiProvider.GenerateImageAsync(openAiRequest, CancellationToken.None));
+            results.Add(await openAiProvider.GenerateImageAsync(openAiRequest, TestContext.Current.CancellationToken));
         }
 
         if (HasGoogleProjectId)
@@ -258,7 +258,7 @@ public class EndToEndIntegrationTests
                 Messages = new List<ChatMessage> { new(ChatRole.User, prompt) },
                 Model = ImageModels.Google.Imagen3
             };
-            results.Add(await googleProvider.GenerateImageAsync(googleRequest, CancellationToken.None));
+            results.Add(await googleProvider.GenerateImageAsync(googleRequest, TestContext.Current.CancellationToken));
         }
 
         // Assert - All providers should successfully generate images
