@@ -197,8 +197,8 @@ public class GenerateImageE2ETests : IClassFixture<McpServerFixture>
         deserializeAction.Should().NotThrow();
         
         // Should have proper indentation (from WriteIndented = true) or be compact JSON
-        response.Content.Should().Contain("{"); // JSON structure
-        (response.Content.Contains("  ") || response.Content.Contains("\"")).Should().BeTrue(); // Indented or valid JSON
+        response.Content.Should().Contain("{"); // JSON structure - FluentAssertions requires string
+        (response.Content.Contains("  ") || response.Content.Contains('"')).Should().BeTrue(); // Indented or valid JSON
     }
 
     [Fact]
