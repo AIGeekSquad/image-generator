@@ -180,7 +180,7 @@ public static class HostBuilderConfigurator
     {
         builder.Services.AddSingleton<IImageGenerationService>(sp =>
         {
-            var builtInProviders = sp.GetServices<IImageGenerationProvider>().Where(p => p != null);
+            var builtInProviders = sp.GetServices<IImageGenerationProvider>();
             var externalProviders = sp.GetService<IEnumerable<IImageGenerationProvider>>() ?? Enumerable.Empty<IImageGenerationProvider>();
 
             var allProviders = builtInProviders.Concat(externalProviders).ToList();
