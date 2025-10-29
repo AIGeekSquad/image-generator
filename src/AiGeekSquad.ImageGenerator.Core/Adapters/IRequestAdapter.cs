@@ -148,7 +148,7 @@ public class ConversationalRequestAdapter : IRequestAdapter<ConversationalImageG
     }
 
     private static void ProcessConversationImages(
-        IList<ImageContent>? conversationImages,
+        List<ImageContent>? conversationImages,
         List<ImageReference> images,
         Microsoft.Extensions.AI.ChatMessage chatMessage)
     {
