@@ -16,6 +16,32 @@ namespace AiGeekSquad.ImageGenerator.Tool.Configuration;
 public static class HostBuilderConfigurator
 {
     /// <summary>
+    /// Configuration key constants to avoid magic strings
+    /// </summary>
+    private static class ConfigurationKeys
+    {
+        // OpenAI configuration keys
+        public const string OpenAIApiKey = "OpenAI:ApiKey";
+        public const string OpenAIEndpoint = "OpenAI:Endpoint";
+        public const string OpenAIDefaultModel = "OpenAI:DefaultModel";
+
+        // Google configuration keys
+        public const string GoogleProjectId = "Google:ProjectId";
+        public const string GoogleLocation = "Google:Location";
+        public const string GoogleDefaultModel = "Google:DefaultModel";
+
+        // External providers configuration
+        public const string ExternalProvidersAssemblies = "ExternalProviders:Assemblies";
+
+        // Environment variable names
+        public const string OpenAIApiKeyEnv = "OPENAI_API_KEY";
+        public const string GoogleProjectIdEnv = "GOOGLE_PROJECT_ID";
+
+        // Command line argument prefixes
+        public const string ProviderAssemblyArgPrefix = "--provider-assembly=";
+    }
+
+    /// <summary>
     /// Configures all services for the image generation MCP server
     /// </summary>
     /// <param name="builder">Host application builder</param>
@@ -63,8 +89,8 @@ public static class HostBuilderConfigurator
     private static void RegisterProviders(HostApplicationBuilder builder, string[] args)
     {
         // Get API keys from configuration or environment
-        var openAiApiKey = builder.Configuration["OpenAI:ApiKey"] ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-        var googleProjectId = builder.Configuration["Google:ProjectId"] ?? Environment.GetEnvironmentVariable("GOOGLE_PROJECT_ID");
+        var openAiApiKey = builder.Configuration[ConfigurationKeys.OpenAIApiKey] ?? Environment.GetEnvironmentVariable(ConfigurationKeys.OpenAIApiKeyEnv);
+        var googleProjectId = builder.Configuration[ConfigurationKeys.GoogleProjectId] ?? Environment.GetEnvironmentVariable(ConfigurationKeys.GoogleProjectIdEnv);
 
         // Validate at least one provider is configured
         ValidateProviderConfiguration(openAiApiKey, googleProjectId);
@@ -90,8 +116,8 @@ public static class HostBuilderConfigurator
             throw new InvalidOperationException(
                 "No image generation providers are configured. " +
                 "Please configure at least one provider by setting either:\n" +
-                "- OPENAI_API_KEY environment variable or OpenAI:ApiKey in appsettings.json\n" +
-                "- GOOGLE_PROJECT_ID environment variable or Google:ProjectId in appsettings.json");
+                $"- {ConfigurationKeys.OpenAIApiKeyEnv} environment variable or {ConfigurationKeys.OpenAIApiKey} in appsettings.json\n" +
+                $"- {ConfigurationKeys.GoogleProjectIdEnv} environment variable or {ConfigurationKeys.GoogleProjectId} in appsettings.json");
         }
     }
 
@@ -108,8 +134,8 @@ public static class HostBuilderConfigurator
             var config = sp.GetRequiredService<IConfiguration>();
             var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
             var httpClient = httpClientFactory.CreateClient("OpenAI");
-            var endpoint = config["OpenAI:Endpoint"];
-            var defaultModel = config["OpenAI:DefaultModel"];
+            var endpoint = config[ConfigurationKeys.OpenAIEndpoint];
+            var defaultModel = config[ConfigurationKeys.OpenAIDefaultModel];
 
             var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HostBuilderConfigurator");
             logger.LogInformation("Registering OpenAI provider (API key configured)");
@@ -131,8 +157,8 @@ public static class HostBuilderConfigurator
             var config = sp.GetRequiredService<IConfiguration>();
             var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
             var httpClient = httpClientFactory.CreateClient("Google");
-            var location = config["Google:Location"] ?? "us-central1";
-            var defaultModel = config["Google:DefaultModel"];
+            var location = config[ConfigurationKeys.GoogleLocation] ?? "us-central1";
+            var defaultModel = config[ConfigurationKeys.GoogleDefaultModel];
 
             var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HostBuilderConfigurator");
             logger.LogInformation("Registering Google provider (project ID configured), location: {Location}",
@@ -147,9 +173,9 @@ public static class HostBuilderConfigurator
     /// </summary>
     private static void RegisterExternalProviders(HostApplicationBuilder builder, string[] args)
     {
-        var providerAssemblies = builder.Configuration.GetSection("ExternalProviders:Assemblies").Get<string[]>()
-            ?? args.Where(a => a.StartsWith("--provider-assembly="))
-                   .Select(a => a.Substring("--provider-assembly=".Length))
+        var providerAssemblies = builder.Configuration.GetSection(ConfigurationKeys.ExternalProvidersAssemblies).Get<string[]>()
+            ?? args.Where(a => a.StartsWith(ConfigurationKeys.ProviderAssemblyArgPrefix))
+                   .Select(a => a.Substring(ConfigurationKeys.ProviderAssemblyArgPrefix.Length))
                    .ToArray();
 
         if (providerAssemblies?.Length > 0)
