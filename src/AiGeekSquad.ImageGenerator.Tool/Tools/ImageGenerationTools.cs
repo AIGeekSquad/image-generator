@@ -20,6 +20,9 @@ public class ImageGenerationTools(
     IImageGenerationService imageService,
     ILogger<ImageGenerationTools> logger)
 {
+    private const string DefaultProvider = "OpenAI";
+    private static readonly JsonSerializerOptions IndentedJsonOptions = new() { WriteIndented = true };
+
     [McpServerTool]
     [Description("Generate an image from a text prompt using various AI providers (OpenAI, Google, etc.)")]
     public async Task<string> GenerateImage(
@@ -35,10 +38,10 @@ public class ImageGenerationTools(
         {
             // Validate arguments first
             var validationErrors = ValidateGenerateImageArgs(prompt, quality, style, size, numberOfImages);
-            if (validationErrors.Any())
+            if (validationErrors.Count > 0)
             {
                 var errorResponse = new { error = string.Join("; ", validationErrors) };
-                return JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions { WriteIndented = true });
+                return JsonSerializer.Serialize(errorResponse, IndentedJsonOptions);
             }
 
             // Create a ChatMessage with the text prompt
@@ -58,10 +61,10 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.GenerateImageAsync(
-                provider ?? "OpenAI",
+                provider ?? DefaultProvider,
                 request);
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(result, IndentedJsonOptions);
         }
         catch (Exception ex)
         {
@@ -101,10 +104,10 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.GenerateImageFromConversationAsync(
-                provider ?? "OpenAI",
+                provider ?? DefaultProvider,
                 request);
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(result, IndentedJsonOptions);
         }
         catch (JsonException ex)
         {
@@ -148,10 +151,10 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.EditImageAsync(
-                provider ?? "OpenAI",
+                provider ?? DefaultProvider,
                 request);
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(result, IndentedJsonOptions);
         }
         catch (Exception ex)
         {
@@ -180,10 +183,10 @@ public class ImageGenerationTools(
             };
 
             var result = await imageService.CreateVariationAsync(
-                provider ?? "OpenAI",
+                provider ?? DefaultProvider,
                 request);
 
-            return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(result, IndentedJsonOptions);
         }
         catch (Exception ex)
         {
@@ -205,7 +208,7 @@ public class ImageGenerationTools(
                 Capabilities = p.GetCapabilities()
             }).ToList();
 
-            return JsonSerializer.Serialize(providerInfo, new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(providerInfo, IndentedJsonOptions);
         }
         catch (Exception ex)
         {

@@ -88,7 +88,7 @@ public class SmartProviderSelector : IProviderSelectionStrategy
     {
         var options = await GetProviderOptionsAsync(context, services);
         
-        if (!options.Any())
+        if (options.Count == 0)
         {
             var availableProviders = _registry.GetAvailableFactories(services)
                 .Select(f => f.Name)
