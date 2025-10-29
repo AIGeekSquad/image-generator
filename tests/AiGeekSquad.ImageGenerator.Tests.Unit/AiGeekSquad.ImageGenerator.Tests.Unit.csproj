@@ -14,6 +14,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="7.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="xunit.v3" Version="3.1.0" />
@@ -25,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\AiGeekSquad.ImageGenerator.Core\AiGeekSquad.ImageGenerator.Core.csproj" />
+    <ProjectReference Include="..\..\src\AiGeekSquad.ImageGenerator.Tool\AiGeekSquad.ImageGenerator.Tool.csproj" />
   </ItemGroup>
 
   <ItemGroup>
