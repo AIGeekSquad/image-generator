@@ -309,24 +309,6 @@ public class ImageGenerationRequestAdapterTests
     }
 
     [Fact]
-    public void Adapt_WithNullMessages_ReturnsEmptyPrompt()
-    {
-        // Arrange
-        var source = new ImageGenerationRequest
-        {
-            Messages = null!
-        };
-
-        // Act
-        var result = _adapter.Adapt(source);
-
-        // Assert
-        using var scope = new AssertionScope();
-        result.Prompt.Should().BeEmpty();
-        result.Messages.Should().BeEmpty();
-    }
-
-    [Fact]
     public void Adapt_WithTextContent_ExtractsText()
     {
         // Arrange

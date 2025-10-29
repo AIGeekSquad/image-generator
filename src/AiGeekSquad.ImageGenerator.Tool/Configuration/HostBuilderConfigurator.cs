@@ -16,6 +16,11 @@ namespace AiGeekSquad.ImageGenerator.Tool.Configuration;
 public static class HostBuilderConfigurator
 {
     /// <summary>
+    /// Logger category name for HostBuilderConfigurator
+    /// </summary>
+    private const string LoggerCategoryName = "HostBuilderConfigurator";
+
+    /// <summary>
     /// Configuration key constants to avoid magic strings
     /// </summary>
     private static class ConfigurationKeys
@@ -137,7 +142,7 @@ public static class HostBuilderConfigurator
             var endpoint = config[ConfigurationKeys.OpenAIEndpoint];
             var defaultModel = config[ConfigurationKeys.OpenAIDefaultModel];
 
-            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HostBuilderConfigurator");
+            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger(LoggerCategoryName);
             logger.LogInformation("Registering OpenAI provider (API key configured)");
 
             return new OpenAIImageProvider(openAiApiKey, endpoint, defaultModel, httpClient);
@@ -160,7 +165,7 @@ public static class HostBuilderConfigurator
             var location = config[ConfigurationKeys.GoogleLocation] ?? "us-central1";
             var defaultModel = config[ConfigurationKeys.GoogleDefaultModel];
 
-            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HostBuilderConfigurator");
+            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger(LoggerCategoryName);
             logger.LogInformation("Registering Google provider (project ID configured), location: {Location}",
                 location);
 
@@ -183,7 +188,7 @@ public static class HostBuilderConfigurator
             builder.Services.AddSingleton<IEnumerable<IImageGenerationProvider>>(sp =>
             {
                 var loader = sp.GetRequiredService<IProviderLoader>();
-                var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HostBuilderConfigurator");
+                var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger(LoggerCategoryName);
                 var externalProviders = new List<IImageGenerationProvider>();
 
                 foreach (var assemblyPath in providerAssemblies)
@@ -211,7 +216,7 @@ public static class HostBuilderConfigurator
 
             var allProviders = builtInProviders.Concat(externalProviders).ToList();
 
-            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("HostBuilderConfigurator");
+            var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger(LoggerCategoryName);
             logger.LogInformation("Registered {Count} provider(s): {Providers}",
                 allProviders.Count,
                 string.Join(", ", allProviders.Select(p => p.ProviderName)));
