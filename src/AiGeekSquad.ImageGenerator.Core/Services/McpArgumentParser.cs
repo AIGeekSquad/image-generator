@@ -79,7 +79,7 @@ public class ImageSize
 public class ValidationResult
 {
     /// <summary>Gets whether the validation passed (no errors)</summary>
-    public bool IsValid => !Errors.Any();
+    public bool IsValid => Errors.Count == 0;
     /// <summary>Gets or sets the list of validation errors</summary>
     public List<string> Errors { get; set; } = new();
     /// <summary>Gets or sets the list of validation warnings</summary>
@@ -104,8 +104,7 @@ public class McpArgumentParser : IArgumentParser
     /// <returns>Parsed arguments object</returns>
     public ParsedArguments Parse(Dictionary<string, object?> args)
     {
-        if (args == null)
-            throw new ArgumentNullException(nameof(args));
+        ArgumentNullException.ThrowIfNull(args);
 
         var parsed = new ParsedArguments();
 
@@ -222,17 +221,19 @@ public class McpArgumentParser : IArgumentParser
     private static bool IsValidStyle(string style) =>
         style == "vivid" || style == "natural";
 
+    private static readonly char[] SizeSeparators = { 'x', 'X' };
+
     /// <summary>
     /// Parses a size string like "1024x1024" into structured format
     /// </summary>
     /// <param name="sizeString">Size string in format "WIDTHxHEIGHT"</param>
     /// <returns>Parsed size object, or null if invalid</returns>
-    public ImageSize? ParseSize(string? sizeString)
+    public static ImageSize? ParseSize(string? sizeString)
     {
         if (string.IsNullOrWhiteSpace(sizeString))
             return null;
 
-        var parts = sizeString.Split(new[] { 'x', 'X' }, StringSplitOptions.None);
+        var parts = sizeString.Split(SizeSeparators, StringSplitOptions.None);
         if (parts.Length != 2)
             return null;
 

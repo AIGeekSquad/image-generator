@@ -195,7 +195,7 @@ public class McpServerFixture : IAsyncLifetime
     /// <summary>
     /// Configure a provider to simulate failure
     /// </summary>
-    public void ConfigureProviderToFail(string providerName)
+    public static void ConfigureProviderToFail(string providerName)
     {
         // This would be implemented with a test double or mock
         // For now, we'll document the need for this capability
@@ -226,6 +226,8 @@ public class McpServerFixture : IAsyncLifetime
             await _host.StopAsync(TestContext.Current.CancellationToken);
             _host.Dispose();
         }
+
+        GC.SuppressFinalize(this);
     }
 }
 

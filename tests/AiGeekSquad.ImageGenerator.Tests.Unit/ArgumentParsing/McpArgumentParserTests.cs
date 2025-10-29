@@ -84,7 +84,7 @@ public class McpArgumentParserTests
         string input, int expectedWidth, int expectedHeight)
     {
         // Act
-        var result = _parser.ParseSize(input);
+        var result = McpArgumentParser.ParseSize(input);
 
         // Assert
         result.Should().NotBeNull();
@@ -109,7 +109,7 @@ public class McpArgumentParserTests
     public void ParseSize_InvalidFormats_ReturnsNull(string? input)
     {
         // Act
-        var result = _parser.ParseSize(input);
+        var result = McpArgumentParser.ParseSize(input);
 
         // Assert
         result.Should().BeNull();
