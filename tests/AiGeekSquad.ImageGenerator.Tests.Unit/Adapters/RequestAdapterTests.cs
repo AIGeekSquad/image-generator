@@ -314,7 +314,7 @@ public class ImageGenerationRequestAdapterTests
         // Arrange
         var source = new ImageGenerationRequest
         {
-            Messages = null
+            Messages = null!
         };
 
         // Act

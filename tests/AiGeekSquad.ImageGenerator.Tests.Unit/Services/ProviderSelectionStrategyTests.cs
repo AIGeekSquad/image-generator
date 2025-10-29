@@ -16,6 +16,11 @@ namespace AiGeekSquad.ImageGenerator.Tests.Unit.Services;
 public class SmartProviderSelectorTests
 {
     private readonly ILogger<SmartProviderSelector> _logger;
+    private static readonly ImageOperation[] s_generateOperation = new[] { ImageOperation.Generate };
+    private static readonly string[] s_modelAB = new[] { "model-a", "model-b" };
+    private static readonly string[] s_modelC = new[] { "model-c" };
+    private static readonly string[] s_modelA = new[] { "model-a" };
+    private static readonly string[] s_modelB = new[] { "model-b" };
 
     public SmartProviderSelectorTests()
     {
@@ -89,12 +94,12 @@ public class SmartProviderSelectorTests
         // Arrange
         var factory1 = new TestProviderFactory("Provider1", 
             priority: 100, 
-            operations: new[] { ImageOperation.Generate },
-            models: new[] { "model-a", "model-b" });
+            operations: s_generateOperation,
+            models: s_modelAB);
         var factory2 = new TestProviderFactory("Provider2", 
             priority: 200, 
-            operations: new[] { ImageOperation.Generate },
-            models: new[] { "model-c" });
+            operations: s_generateOperation,
+            models: s_modelC);
         var registry = new TestProviderRegistry(new List<IProviderFactory> { factory1, factory2 });
         var selector = new SmartProviderSelector(registry, _logger);
         var context = new ProviderSelectionContext
@@ -185,13 +190,13 @@ public class SmartProviderSelectorTests
         // Arrange
         var factory1 = new TestProviderFactory("Provider1", 
             priority: 100, 
-            operations: new[] { ImageOperation.Generate },
-            models: new[] { "model-a" },
+            operations: s_generateOperation,
+            models: s_modelA,
             acceptsCustomModels: true);
         var factory2 = new TestProviderFactory("Provider2", 
             priority: 200, 
-            operations: new[] { ImageOperation.Generate },
-            models: new[] { "model-b" },
+            operations: s_generateOperation,
+            models: s_modelB,
             acceptsCustomModels: false);
         var registry = new TestProviderRegistry(new List<IProviderFactory> { factory1, factory2 });
         var selector = new SmartProviderSelector(registry, _logger);
